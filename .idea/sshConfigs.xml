@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig host="eez120.ece.ust.hk" id="1ca1b159-7b3b-48bf-9559-33f2370e54b2" keyPath="$PROJECT_DIR$/../.ssh/id_rsa" port="22" nameFormat="DESCRIPTIVE" username="jcenaa" />
+      <sshConfig authType="PASSWORD" connectionConfig="{&quot;serverAliveInterval&quot;:300}" host="143.89.78.232" id="4cf2fde8-759d-4924-86f6-7c69176c3088" port="22" nameFormat="DESCRIPTIVE" username="jcen" />
+    </configs>
+  </component>
+</project>

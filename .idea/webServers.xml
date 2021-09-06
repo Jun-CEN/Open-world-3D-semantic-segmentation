@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="8d6838e2-1787-46dd-a305-d6fd4c0150e9" name="eez120">
+        <fileTransfer rootFolder="/home/jcenaa" accessType="SFTP" host="eez120.ece.ust.hk" port="22" sshConfigId="1ca1b159-7b3b-48bf-9559-33f2370e54b2" sshConfig="jcenaa@eez120.ece.ust.hk:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="5834dd79-ee9d-4ee0-bf14-950ed5a2f971" name="3090lab">
+        <fileTransfer rootFolder="/home/jcen" accessType="SFTP" host="143.89.78.232" port="22" sshConfigId="4cf2fde8-759d-4924-86f6-7c69176c3088" sshConfig="jcen@143.89.78.232:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="62a6de1f-6f01-43bc-9b69-accb457c3f89" name="eez061">
+        <fileTransfer rootFolder="/data_shared/Docker/jcen" accessType="SFTP" host="eez061.ece.ust.hk" port="23333" sshConfigId="b097b918-079b-4881-b741-12158689b8f5" sshConfig="jcen@eez061.ece.ust.hk:23333 agent" authAgent="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
