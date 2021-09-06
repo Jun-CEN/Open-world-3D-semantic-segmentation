@@ -40,13 +40,17 @@
 ./
 ├── 
 ├── ...
-└── path_to_data_shown_in_config/
-		├──v1.0-trainval
-		├──v1.0-test
-		├──samples
-		├──sweeps
-		├──maps
-
+└── lidarseg/
+    ├──v1.0-trainval/
+    ├──v1.0-mini/
+    ├──v1.0-test/
+    ├──nuscenes_infos_train.pkl
+    ├──nuscenes_infos_val.pkl
+    ├──nuscenes_infos_test.pkl
+└── lidarseg/
+    ├──v1.0-trainval/
+    ├──v1.0-mini/
+    ├──v1.0-test/
 ```
 
 ## Training for SemanticKITTI
