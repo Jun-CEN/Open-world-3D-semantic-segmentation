@@ -121,8 +121,8 @@ def main(args):
             # point_uncertainty_logits.tofile(
             #         '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_logits_dummy_latest/' + idx_s + '.label')
             point_uncertainty_softmax.tofile(
-                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_softmax_3dummy_0_01_final/' + idx_s + '.label')
-            point_predict.tofile('/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/predictions_3dummy_0_01_final_cross/' + idx_s + '.label')
+                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_softmax_3dummy_01_01_final/' + idx_s + '.label')
+            point_predict.tofile('/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/predictions_3dummy_01_01_final_cross/' + idx_s + '.label')
 
             for count, i_val_grid in enumerate(val_grid):
                 hist_list.append(fast_hist_crop(predict_labels[

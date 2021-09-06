@@ -94,8 +94,11 @@ def main(args):
             uncertainty_scores_logits = -torch.max(predict_labels, dim=1)[0]
             uncertainty_scores_logits = uncertainty_scores_logits.cpu().detach().numpy()
             softmax_layer = torch.nn.Softmax(dim=1)
-            # uncertainty_scores_softmax = 1 - torch.max(softmax_layer(predict_labels), dim=1)[0]
-            uncertainty_scores_softmax = softmax_layer(predict_labels)[:,5,...]
+            uncertainty_scores_softmax = 1 - torch.max(softmax_layer(predict_labels), dim=1)[0]
+
+            #upper bound
+            # uncertainty_scores_softmax = softmax_layer(predict_labels)[:,5,...]
+
             uncertainty_scores_softmax = uncertainty_scores_softmax.cpu().detach().numpy()
             predict_labels = torch.argmax(predict_labels, dim=1)
             predict_labels = predict_labels.cpu().detach().numpy()
@@ -108,12 +111,12 @@ def main(args):
             point_uncertainty_logits = uncertainty_scores_logits[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]]
             point_uncertainty_softmax = uncertainty_scores_softmax[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]]
             idx_s = "%06d" % idx[0]
-            # point_uncertainty_logits.tofile(
-            #         '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_logits/' + idx_s + '.label')
+            point_uncertainty_logits.tofile(
+                    '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_logits_naive/' + idx_s + '.label')
             point_uncertainty_softmax.tofile(
-                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_softmax_upper/' + idx_s + '.label')
+                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_softmax_naive/' + idx_s + '.label')
             point_predict.tofile(
-                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/predictions_upper_cross/' + idx_s + '.label')
+                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/predictions_naive_cross/' + idx_s + '.label')
 
             for count, i_val_grid in enumerate(val_grid):
                 hist_list.append(fast_hist_crop(predict_labels[

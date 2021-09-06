@@ -1,24 +1,5 @@
 
-# Cylindrical and Asymmetrical 3D Convolution Networks for LiDAR Segmentation
-
- The source code of our work **"Cylindrical and Asymmetrical 3D Convolution Networks for LiDAR Segmentation**
-![img|center](./img/pipeline.png)
-
-## News
-- **2021-03 [NEW:fire:]** Cylinder3D is accepted to CVPR 2021 as an **Oral** presentation
-- **2021-01  [NEW:fire:]** Cylinder3D achieves the **1st place** in the leaderboard of SemanticKITTI **multiscan** semantic segmentation
-<p align="center">
-   <img src="./img/leaderboard2.png" width="30%"> 
-</p>
-
-- **2020-12 [NEW:fire:]** Cylinder3D achieves the 2nd place in the challenge of nuScenes LiDAR segmentation, with mIoU=0.779, fwIoU=0.899 and FPS=10Hz.
-- **2020-12** We release the new version of Cylinder3D with nuScenes dataset support.
-- **2020-11** We preliminarily release the Cylinder3D--v0.1, supporting the LiDAR semantic segmentation on SemanticKITTI and nuScenes.
-- **2020-11** Our work achieves the **1st place** in the leaderboard of SemanticKITTI semantic segmentation (until CVPR2021 DDL, still rank 1st in term of Accuracy now), and based on the proposed method, we also achieve the **1st place** in the leaderboard of SemanticKITTI panoptic segmentation.
-
-<p align="center">
-   <img src="./img/leaderboard.png" width="40%"> 
-</p>
+# Open-world semantic segmentation for Lidar points
 
 ## Installation
 
@@ -68,56 +49,50 @@
 
 ```
 
-## Training
-1. modify the config/semantickitti.yaml with your custom settings. We provide a sample yaml for SemanticKITTI
-2. train the network by running "sh train.sh"
-
-### Training for nuScenes
-Please refer to [NUSCENES-GUIDE](./NUSCENES-GUIDE.md)
-
-### Pretrained Models
--- We provide a pretrained model for SemanticKITTI [LINK1](https://drive.google.com/file/d/1q4u3LlQXz89LqYW3orXL5oTs_4R2eS8P/view?usp=sharing) or [LINK2](https://pan.baidu.com/s/1c0oIL2QTTcjCo9ZEtvOIvA) (access code: xqmi)
-
--- For nuScenes dataset, please refer to [NUSCENES-GUIDE](./NUSCENES-GUIDE.md)
-
-## Semantic segmentation demo for a folder of lidar scans
+## Training for SemanticKITTI
+### Naive method
 ```
-python demo_folder.py --demo-folder YOUR_FOLDER --save-folder YOUR_SAVE_FOLDER
+./train_naive.sh
 ```
-If you want to validate with your own datasets, you need to provide labels.
---demo-label-folder is optional
+### Upper bound
 ```
-python demo_folder.py --demo-folder YOUR_FOLDER --save-folder YOUR_SAVE_FOLDER --demo-label-folder YOUR_LABEL_FOLDER
+./train_upper.sh
 ```
+### Classifier placeholder
+- Change the path of pretrained naive model in `/config/semantickitti_ood_basic.yaml`, line 63.
 
-## TODO List
-- [x] Release pretrained model for nuScenes.
-- [x] Support multiscan semantic segmentation.
-- [ ] Support more models, including PolarNet, RandLA, SequeezeV3 and etc.
-- [ ] Integrate LiDAR Panotic Segmentation into the codebase.
+- Change the coefficient lamda_1 in `/config/semantickitti_ood_basic.yaml`, line 70.
 
-## Reference
-
-If you find our work useful in your research, please consider citing our [paper](https://arxiv.org/pdf/2011.10033):
+- Change the dummy classifier number in `/train_cylinder_asym_ood_basic.py`, line 198.
 ```
-@article{zhu2020cylindrical,
-  title={Cylindrical and Asymmetrical 3D Convolution Networks for LiDAR Segmentation},
-  author={Zhu, Xinge and Zhou, Hui and Wang, Tai and Hong, Fangzhou and Ma, Yuexin and Li, Wei and Li, Hongsheng and Lin, Dahua},
-  journal={arXiv preprint arXiv:2011.10033},
-  year={2020}
-}
+./train_basic.sh
+```
+### Data placeholder
 
-#for LiDAR panoptic segmentation
-@article{hong2020lidar,
-  title={LiDAR-based Panoptic Segmentation via Dynamic Shifting Network},
-  author={Hong, Fangzhou and Zhou, Hui and Zhu, Xinge and Li, Hongsheng and Liu, Ziwei},
-  journal={arXiv preprint arXiv:2011.11964},
-  year={2020}
-}
+- Change the path of pretrained naive model in `/config/semantickitti_ood_final.yaml`, line 63.
+
+- Change lamda_1, lamda_2 in `/config/semantickitti_ood_final.yaml`, line 70, 71.
+
+- Change the dummy classifier number in `/train_cylinder_asym_ood_final.py`, line 198.
+```
+./train_final.sh
+```
+## Evaluation for SemanticKITTI
+We save the in-distribution prediction labels and uncertainty scores for every points in the validation set, 
+and these files will be used to calculate the closed-set mIoU and open-set metrics including AUPR, AURPC, and FPR95.
+### MSP/Maxlogit
+- Change the trained model path (Naive method) in `/config/semantickitti.yaml`, line 63.
+
+- Change the saving path of in-distribution prediction results and uncertainty scores in `val_cylinder_asym.py`, line 112, 114, 116.
+```
+./val.sh
 ```
 
-## Acknowledgments
-We thanks for the opensource codebases, [PolarSeg](https://github.com/edwardzhou130/PolarSeg) and [spconv](https://github.com/traveller59/spconv)
+### Classifier/Data placeholder
+- Change the trained model path (Placeholder method) in `/config/semantickitti_ood_final.yaml`, line 63.
 
-## Hiring from Zhouhui
-The SenseTime-LidarSegmentation is now hiring. If you are interested in internship, researcher and software engineer positions related to lidar segmentation or deep learning, feel free to send email: zhouhui@sensetime.com.
+- Change the saving path of in-distribution prediction results and uncertainty scores in `val_cylinder_asym_ood.py`, line 124, 125.
+
+```
+./val_ood.sh
+```
