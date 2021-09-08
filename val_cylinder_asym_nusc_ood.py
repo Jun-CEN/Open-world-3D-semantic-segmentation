@@ -18,7 +18,7 @@ from dataloader.pc_dataset import get_SemKITTI_label_name
 from builder import data_builder, model_builder, loss_builder
 from config.config import load_config_data
 
-from utils.load_save_util import load_checkpoint
+from utils.load_save_util import load_checkpoint, load_checkpoint_1b1
 
 import warnings
 from shutil import copyfile
@@ -59,10 +59,8 @@ def main(args):
                                                                 kernel_size=3, stride=1, padding=1,
                                                                 bias=True).to(pytorch_device)
     if os.path.exists(model_load_path):
-        my_model = load_checkpoint(model_load_path, my_model)
+        my_model = load_checkpoint_1b1(model_load_path, my_model)
         print('Load checkpoint file successfully!')
-    else:
-        print('Checkpoint file does not exit!')
 
     my_model.to(pytorch_device)
     optimizer = optim.Adam(my_model.parameters(), lr=train_hypers["learning_rate"])
@@ -95,16 +93,16 @@ def main(args):
 
             coor_ori, output_normal_dummy = my_model.forward_dummy_final(
                 val_pt_fea_ten, val_grid_ten, val_batch_size, args.dummynumber)
-            predict_labels = output_normal_dummy[:,:-1,...]
+            predict_labels = output_normal_dummy[:, :-1, ...]
 
             # aux_loss = loss_fun(aux_outputs, point_label_tensor)
             loss = lovasz_softmax(torch.nn.functional.softmax(predict_labels).detach(), val_label_tensor,
                                   ignore=0) + loss_func(predict_labels.detach(), val_label_tensor)
-            uncertainty_scores_logits = output_normal_dummy[:,-1,...]
+            uncertainty_scores_logits = output_normal_dummy[:, -1, ...]
             uncertainty_scores_logits = uncertainty_scores_logits.cpu().detach().numpy()
 
             softmax_layer = torch.nn.Softmax(dim=1)
-            uncertainty_scores_softmax = softmax_layer(output_normal_dummy)[:,-1,...]
+            uncertainty_scores_softmax = softmax_layer(output_normal_dummy)[:, -1, ...]
             uncertainty_scores_softmax = uncertainty_scores_softmax.cpu().detach().numpy()
 
             predict_labels = torch.argmax(predict_labels, dim=1)
@@ -114,15 +112,19 @@ def main(args):
             # val_pt_fea_ten: [batch, points, 9]
             # val_pt_labs: [batch, points, 1]
             count = 0
-            point_predict = predict_labels[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]].astype(np.int32)
-            point_uncertainty_logits = uncertainty_scores_logits[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]]
-            point_uncertainty_softmax = uncertainty_scores_softmax[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]]
+            point_predict = predict_labels[
+                count, val_grid[count][:, 0], val_grid[count][:, 1], val_grid[count][:, 2]].astype(np.int32)
+            point_uncertainty_logits = uncertainty_scores_logits[
+                count, val_grid[count][:, 0], val_grid[count][:, 1], val_grid[count][:, 2]]
+            point_uncertainty_softmax = uncertainty_scores_softmax[
+                count, val_grid[count][:, 0], val_grid[count][:, 1], val_grid[count][:, 2]]
             idx_s = "%06d" % idx[0]
             # point_uncertainty_logits.tofile(
             #         '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_logits_dummy_latest/' + idx_s + '.label')
             point_uncertainty_softmax.tofile(
-                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_softmax_1dummy_1_01_final/' + idx_s + '.label')
-            point_predict.tofile('/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/predictions_1dummy_1_01_final_cross/' + idx_s + '.label')
+                '/harddisk/jcenaa/nuScenes/predictions/scores_softmax_3dummy_1_001_final_latest/' + idx_s + '.label')
+            point_predict.tofile(
+                '/harddisk/jcenaa/nuScenes/predictions/predictions_3dummy_1_001_final_latest/' + idx_s + '.label')
 
             for count, i_val_grid in enumerate(val_grid):
                 hist_list.append(fast_hist_crop(predict_labels[
@@ -147,8 +149,8 @@ def main(args):
 if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('-y', '--config_path', default='config/semantickitti_ood_final.yaml')
-    parser.add_argument('--dummynumber', default=1, type=int, help='number of dummy label.')
+    parser.add_argument('-y', '--config_path', default='config/nuScenes_ood_final.yaml')
+    parser.add_argument('--dummynumber', default=3, type=int, help='number of dummy label.')
     args = parser.parse_args()
 
     print(' '.join(sys.argv))

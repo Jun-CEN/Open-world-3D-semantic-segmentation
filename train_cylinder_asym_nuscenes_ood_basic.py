@@ -10,15 +10,15 @@ import sys
 import numpy as np
 import torch
 import torch.optim as optim
-import spconv
 from tqdm import tqdm
+import spconv
 
 from utils.metric_util import per_class_iu, fast_hist_crop
-from dataloader.pc_dataset import get_SemKITTI_label_name
+from dataloader.pc_dataset import get_nuScenes_label_name
 from builder import data_builder, model_builder, loss_builder
 from config.config import load_config_data
 
-from utils.load_save_util import load_checkpoint
+from utils.load_save_util import load_checkpoint, load_checkpoint_1b1
 from torch.utils.tensorboard import SummaryWriter
 
 import warnings
@@ -52,9 +52,8 @@ def main(args):
     model_latest_path = train_hypers['model_latest_path']
 
     lamda_1 = train_hypers['lamda_1']
-    lamda_2 = train_hypers['lamda_2']
 
-    SemKITTI_label_name = get_SemKITTI_label_name(dataset_config["label_mapping"])
+    SemKITTI_label_name = get_nuScenes_label_name(dataset_config["label_mapping"])
     unique_label = np.asarray(sorted(list(SemKITTI_label_name.keys())))[1:] - 1
     unique_label_str = [SemKITTI_label_name[x] for x in unique_label + 1]
 
@@ -65,16 +64,15 @@ def main(args):
                                                                 bias=True).to(pytorch_device)
 
     if os.path.exists(model_load_path):
-        my_model = load_checkpoint(model_load_path, my_model)
+        my_model = load_checkpoint_1b1(model_load_path, my_model)
 
     my_model.to(pytorch_device)
-    # optimizer = optim.Adam(my_model.parameters(), lr=train_hypers["learning_rate"])
-    optimizer = optim.Adam(filter(lambda p: p.requires_grad, my_model.parameters()), lr=train_hypers["learning_rate"])
+    optimizer = optim.Adam(my_model.parameters(), lr=train_hypers["learning_rate"])
 
     loss_func_train, lovasz_softmax = loss_builder.build_ood(wce=True, lovasz=True,
-                                                            num_class=num_class, ignore_label=ignore_label, weight=lamda_2)
+                                                             num_class=num_class, ignore_label=ignore_label)
     loss_func_val, lovasz_softmax = loss_builder.build(wce=True, lovasz=True,
-                                                                num_class=num_class, ignore_label=ignore_label)
+                                                       num_class=num_class, ignore_label=ignore_label)
 
     train_dataset_loader, val_dataset_loader = data_builder.build(dataset_config,
                                                                   train_dataloader_config,
@@ -87,12 +85,11 @@ def main(args):
     my_model.train()
     global_iter = 0
     check_iter = train_hypers['eval_every_n_steps']
-    writer = SummaryWriter('/harddisk/jcenaa/semantic_kitti/log')
+    writer = SummaryWriter('/harddisk/jcenaa/nuScenes/log')
     while epoch < train_hypers['max_num_epochs']:
         loss_list = []
         pbar = tqdm(total=len(train_dataset_loader))
         time.sleep(10)
-        # lr_scheduler.step(epoch)
         for i_iter, (_, train_vox_label, train_grid, _, train_pt_fea) in enumerate(train_dataset_loader):
             if global_iter % check_iter == 0 and epoch >= 1:
                 my_model.eval()
@@ -109,7 +106,6 @@ def main(args):
                         val_label_tensor = val_vox_label.type(torch.LongTensor).to(pytorch_device)
 
                         predict_labels = my_model(val_pt_fea_ten, val_grid_ten, val_batch_size)
-                        # aux_loss = loss_fun(aux_outputs, point_label_tensor)
                         loss = lovasz_softmax(torch.nn.functional.softmax(predict_labels).detach(), val_label_tensor,
                                               ignore=0) + loss_func_val(predict_labels.detach(), val_label_tensor)
                         predict_labels = torch.argmax(predict_labels, dim=1)
@@ -141,26 +137,27 @@ def main(args):
                       (np.mean(val_loss_list)))
 
             train_pt_fea_ten = [torch.from_numpy(i).type(torch.FloatTensor).to(pytorch_device) for i in train_pt_fea]
-            # train_grid_ten = [torch.from_numpy(i[:,:2]).to(pytorch_device) for i in train_grid]
             train_vox_ten = [torch.from_numpy(i).to(pytorch_device) for i in train_grid]
             point_label_tensor = train_vox_label.type(torch.LongTensor).to(pytorch_device)
-            point_label_tensor[point_label_tensor == 5] = 0
+            unknown_clss = [1,5,8,9]
+            for unknown_cls in unknown_clss:
+                point_label_tensor[point_label_tensor == unknown_cls] = 0
 
             # forward + backward + optimize
             coor_ori, output_normal_dummy = my_model.forward_dummy_final(train_pt_fea_ten, train_vox_ten,
-                                                                                        train_batch_size,
-                                                                                        args.dummynumber)
+                                                                         train_batch_size,
+                                                                         args.dummynumber)
             voxel_label_origin = point_label_tensor[coor_ori.permute(1, 0).chunk(chunks=4, dim=0)]
 
             loss_normal = loss_func_train(output_normal_dummy, point_label_tensor)
 
-            output_normal_dummy = output_normal_dummy.permute(0,2,3,4,1)
-            output_normal_dummy = output_normal_dummy[coor_ori.permute(1,0).chunk(chunks=4, dim=0)].squeeze()
-            index_tmp = torch.arange(0,coor_ori.shape[0]).unsqueeze(0).cuda()
-            voxel_label_origin[voxel_label_origin == 20] = 0
+            output_normal_dummy = output_normal_dummy.permute(0, 2, 3, 4, 1)
+            output_normal_dummy = output_normal_dummy[coor_ori.permute(1, 0).chunk(chunks=4, dim=0)].squeeze()
+            index_tmp = torch.arange(0, coor_ori.shape[0]).unsqueeze(0).cuda()
+            voxel_label_origin[voxel_label_origin == 17] = 0
             index_tmp = torch.cat([index_tmp, voxel_label_origin], dim=0)
             output_normal_dummy[index_tmp.chunk(chunks=2, dim=0)] = -1e9
-            label_dummy = torch.ones(output_normal_dummy.shape[0]).type(torch.LongTensor).cuda()*20
+            label_dummy = torch.ones(output_normal_dummy.shape[0]).type(torch.LongTensor).cuda() * 17
             label_dummy[voxel_label_origin.squeeze() == 0] = 0
             loss_dummy = loss_func_train(output_normal_dummy, label_dummy)
 
@@ -168,7 +165,7 @@ def main(args):
             writer.add_scalar('Loss/loss_dummy', loss_dummy.item(), global_iter)
             # print(point_label_tensor.shape) # [bt, 480, 360, 32]
             # print(outputs.shape) # [bt, 20, 480, 360, 32]
-            loss = loss_normal+lamda_1*loss_dummy
+            loss = loss_normal + lamda_1 * loss_dummy
             loss.backward()
             optimizer.step()
             loss_list.append(loss.item())
@@ -196,8 +193,8 @@ def main(args):
 if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('-y', '--config_path', default='config/semantickitti_ood_final.yaml')
-    parser.add_argument('--dummynumber', default=1, type=int, help='number of dummy label.')
+    parser.add_argument('-y', '--config_path', default='config/nuScenes_ood_basic.yaml')
+    parser.add_argument('--dummynumber', default=3, type=int, help='number of dummy label.')
     args = parser.parse_args()
 
     print(' '.join(sys.argv))

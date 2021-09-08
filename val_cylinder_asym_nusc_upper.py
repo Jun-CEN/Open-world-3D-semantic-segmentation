@@ -11,14 +11,13 @@ import numpy as np
 import torch
 import torch.optim as optim
 from tqdm import tqdm
-import spconv
 
 from utils.metric_util import per_class_iu, fast_hist_crop
 from dataloader.pc_dataset import get_SemKITTI_label_name
 from builder import data_builder, model_builder, loss_builder
 from config.config import load_config_data
 
-from utils.load_save_util import load_checkpoint
+from utils.load_save_util import load_checkpoint, load_checkpoint_1b1
 
 import warnings
 from shutil import copyfile
@@ -55,14 +54,9 @@ def main(args):
     unique_label_str = [SemKITTI_label_name[x] for x in unique_label + 1]
 
     my_model = model_builder.build(model_config)
-    my_model.cylinder_3d_spconv_seg.logits2 = spconv.SubMConv3d(4 * 32, args.dummynumber, indice_key="logit",
-                                                                kernel_size=3, stride=1, padding=1,
-                                                                bias=True).to(pytorch_device)
     if os.path.exists(model_load_path):
-        my_model = load_checkpoint(model_load_path, my_model)
+        my_model = load_checkpoint_1b1(model_load_path, my_model)
         print('Load checkpoint file successfully!')
-    else:
-        print('Checkpoint file does not exit!')
 
     my_model.to(pytorch_device)
     optimizer = optim.Adam(my_model.parameters(), lr=train_hypers["learning_rate"])
@@ -93,20 +87,23 @@ def main(args):
             val_grid_ten = [torch.from_numpy(i).to(pytorch_device) for i in val_grid]
             val_label_tensor = val_vox_label.type(torch.LongTensor).to(pytorch_device)
 
-            coor_ori, output_normal_dummy = my_model.forward_dummy_final(
-                val_pt_fea_ten, val_grid_ten, val_batch_size, args.dummynumber)
-            predict_labels = output_normal_dummy[:,:-1,...]
-
+            predict_labels = my_model(val_pt_fea_ten, val_grid_ten, val_batch_size)
             # aux_loss = loss_fun(aux_outputs, point_label_tensor)
             loss = lovasz_softmax(torch.nn.functional.softmax(predict_labels).detach(), val_label_tensor,
                                   ignore=0) + loss_func(predict_labels.detach(), val_label_tensor)
-            uncertainty_scores_logits = output_normal_dummy[:,-1,...]
+            uncertainty_scores_logits = -torch.max(predict_labels, dim=1)[0]
             uncertainty_scores_logits = uncertainty_scores_logits.cpu().detach().numpy()
-
             softmax_layer = torch.nn.Softmax(dim=1)
-            uncertainty_scores_softmax = softmax_layer(output_normal_dummy)[:,-1,...]
-            uncertainty_scores_softmax = uncertainty_scores_softmax.cpu().detach().numpy()
 
+            # upper-bound
+            predict_labels_softmax = softmax_layer(predict_labels)
+            print(predict_labels_softmax.shape)
+            softmax_tmp = torch.zeros(1, predict_labels_softmax.shape[2], predict_labels_softmax.shape[3], predict_labels_softmax.shape[4]).cuda()
+            unknown_clss = [1, 5, 8, 9]
+            for unknown_cls in unknown_clss:
+                softmax_tmp = torch.cat((softmax_tmp, predict_labels_softmax[:,unknown_cls,...]), dim=0)
+            uncertainty_scores_softmax = torch.max(softmax_tmp, dim=0)[0].unsqueeze(0)
+            uncertainty_scores_softmax = uncertainty_scores_softmax.cpu().detach().numpy()
             predict_labels = torch.argmax(predict_labels, dim=1)
             predict_labels = predict_labels.cpu().detach().numpy()
             # val_grid_ten: [batch, points, 3]
@@ -119,10 +116,11 @@ def main(args):
             point_uncertainty_softmax = uncertainty_scores_softmax[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]]
             idx_s = "%06d" % idx[0]
             # point_uncertainty_logits.tofile(
-            #         '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_logits_dummy_latest/' + idx_s + '.label')
+            #         '/harddisk/jcenaa/nuScenes/predictions/scores_logits_base/' + idx_s + '.label')
             point_uncertainty_softmax.tofile(
-                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_softmax_1dummy_1_01_final/' + idx_s + '.label')
-            point_predict.tofile('/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/predictions_1dummy_1_01_final_cross/' + idx_s + '.label')
+                '/harddisk/jcenaa/nuScenes/predictions/scores_softmax_upper/' + idx_s + '.label')
+            point_predict.tofile(
+                '/harddisk/jcenaa/nuScenes/predictions/predictions_upper/' + idx_s + '.label')
 
             for count, i_val_grid in enumerate(val_grid):
                 hist_list.append(fast_hist_crop(predict_labels[
@@ -147,8 +145,7 @@ def main(args):
 if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('-y', '--config_path', default='config/semantickitti_ood_final.yaml')
-    parser.add_argument('--dummynumber', default=1, type=int, help='number of dummy label.')
+    parser.add_argument('-y', '--config_path', default='config/nuScenes.yaml')
     args = parser.parse_args()
 
     print(' '.join(sys.argv))

@@ -17,7 +17,7 @@ from dataloader.pc_dataset import get_SemKITTI_label_name
 from builder import data_builder, model_builder, loss_builder
 from config.config import load_config_data
 
-from utils.load_save_util import load_checkpoint
+from utils.load_save_util import load_checkpoint, load_checkpoint_1b1
 
 import warnings
 from shutil import copyfile
@@ -55,7 +55,7 @@ def main(args):
 
     my_model = model_builder.build(model_config)
     if os.path.exists(model_load_path):
-        my_model = load_checkpoint(model_load_path, my_model)
+        my_model = load_checkpoint_1b1(model_load_path, my_model)
         print('Load checkpoint file successfully!')
 
     my_model.to(pytorch_device)
@@ -95,15 +95,6 @@ def main(args):
             uncertainty_scores_logits = uncertainty_scores_logits.cpu().detach().numpy()
             softmax_layer = torch.nn.Softmax(dim=1)
 
-            # upper-bound
-            # predict_labels_softmax = softmax_layer(predict_labels)
-            # print(predict_labels_softmax.shape)
-            # softmax_tmp = torch.zeros(1, predict_labels_softmax.shape[2], predict_labels_softmax.shape[3], predict_labels_softmax.shape[4]).cuda()
-            # unknown_clss = [1, 5, 8, 9]
-            # for unknown_cls in unknown_clss:
-            #     softmax_tmp = torch.cat((softmax_tmp, predict_labels_softmax[:,unknown_cls,...]), dim=0)
-            # uncertainty_scores_softmax = torch.max(softmax_tmp, dim=0)[0].unsqueeze(0)
-
             uncertainty_scores_softmax = 1 - torch.max(softmax_layer(predict_labels), dim=1)[0]
             uncertainty_scores_softmax = uncertainty_scores_softmax.cpu().detach().numpy()
             predict_labels = torch.argmax(predict_labels, dim=1)
@@ -117,25 +108,13 @@ def main(args):
             point_uncertainty_logits = uncertainty_scores_logits[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]]
             point_uncertainty_softmax = uncertainty_scores_softmax[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]]
             idx_s = "%06d" % idx[0]
-            # point_uncertainty_logits.tofile(
-            #         '/harddisk/jcenaa/nuScenes/predictions/scores_logits_base/' + idx_s + '.label')
+            point_uncertainty_logits.tofile(
+                    '/harddisk/jcenaa/nuScenes/predictions/scores_logits_base/' + idx_s + '.label')
             point_uncertainty_softmax.tofile(
                 '/harddisk/jcenaa/nuScenes/predictions/scores_softmax_upper/' + idx_s + '.label')
             point_predict.tofile(
                 '/harddisk/jcenaa/nuScenes/predictions/predictions_upper/' + idx_s + '.label')
-            # if 5 in np.unique(val_pt_labs):
-            #     idx_s = "%06d" % idx[0]
-            #     print(idx_s)
-            #     point_predict.tofile('/harddisk/jcenaa/semantic_kitti/predictions_ood/sequences/08/predictions_18/'+idx_s+'.label')
-            #     point_uncertainty.tofile(
-            #         '/harddisk/jcenaa/semantic_kitti/predictions_ood/sequences/08/scores_naive/' + idx_s + '.label')
-            #     source = '/harddisk/jcenaa/semantic_kitti/dataset/sequences/08/velodyne/'+idx_s+'.bin'
-            #     target = '/harddisk/jcenaa/semantic_kitti/dataset_ood/sequences/08/velodyne/'+idx_s+'.bin'
-            #     copyfile(source, target)
-            #     source = '/harddisk/jcenaa/semantic_kitti/dataset/sequences/08/labels/' + idx_s + '.label'
-            #     target = '/harddisk/jcenaa/semantic_kitti/dataset_ood/sequences/08/labels/' + idx_s + '.label'
-            #     copyfile(source, target)
-            #     global_iter += 1
+
             for count, i_val_grid in enumerate(val_grid):
                 hist_list.append(fast_hist_crop(predict_labels[
                                                     count, val_grid[count][:, 0], val_grid[count][:, 1],

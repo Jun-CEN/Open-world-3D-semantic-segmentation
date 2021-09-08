@@ -145,6 +145,45 @@ class SemKITTI_sk_panop(data.Dataset):
 
 
 @register_dataset
+class SemKITTI_nusc_panop(data.Dataset):
+    def __init__(self, data_path, imageset='train',
+                 return_ref=False, label_mapping="nuscenes.yaml", nusc=None):
+        self.return_ref = return_ref
+
+        with open(imageset, 'rb') as f:
+            data = pickle.load(f)
+
+        with open(label_mapping, 'r') as stream:
+            nuscenesyaml = yaml.safe_load(stream)
+        self.learning_map = nuscenesyaml['learning_map']
+
+        self.nusc_infos = data['infos']
+        self.data_path = data_path
+        self.nusc = nusc
+
+    def __len__(self):
+        'Denotes the total number of samples'
+        return len(self.nusc_infos)
+
+    def __getitem__(self, index):
+        info = self.nusc_infos[index]
+        lidar_path = info['lidar_path'][16:]
+        lidar_sd_token = self.nusc.get('sample', info['token'])['data']['LIDAR_TOP']
+        lidarseg_labels_filename = os.path.join(self.nusc.dataroot,
+                                                self.nusc.get('panoptic', lidar_sd_token)['filename'])
+
+        points_label = np.load(lidarseg_labels_filename)['data'].reshape([-1, 1])
+        sem_label = (points_label // 1000).astype(np.uint8)
+        inst_label = (points_label % 1000).astype(np.uint8)
+        sem_label = np.vectorize(self.learning_map.__getitem__)(sem_label)
+        points = np.fromfile(os.path.join(self.data_path, lidar_path), dtype=np.float32, count=-1).reshape([-1, 5])
+
+        data_tuple = (points[:, :3], sem_label.astype(np.uint8), inst_label.astype(np.uint8))
+        if self.return_ref:
+            data_tuple += (points[:, 3],)
+        return data_tuple
+
+@register_dataset
 class SemKITTI_nusc(data.Dataset):
     def __init__(self, data_path, imageset='train',
                  return_ref=False, label_mapping="nuscenes.yaml", nusc=None):
@@ -180,7 +219,6 @@ class SemKITTI_nusc(data.Dataset):
         if self.return_ref:
             data_tuple += (points[:, 3],)
         return data_tuple
-
 
 def absoluteFilePaths(directory):
     for dirpath, _, filenames in os.walk(directory):

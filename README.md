@@ -69,7 +69,7 @@
 
 - Change the dummy classifier number in `/train_cylinder_asym_ood_basic.py`, line 198.
 ```
-./train_basic.sh
+./train_ood_basic.sh
 ```
 ### Data placeholder
 
@@ -79,7 +79,7 @@
 
 - Change the dummy classifier number in `/train_cylinder_asym_ood_final.py`, line 198.
 ```
-./train_final.sh
+./train_ood_final.sh
 ```
 ## Evaluation for SemanticKITTI
 We save the in-distribution prediction labels and uncertainty scores for every points in the validation set, 
@@ -99,4 +99,58 @@ and these files will be used to calculate the closed-set mIoU and open-set metri
 
 ```
 ./val_ood.sh
+```
+## Training for nuScenes
+### Naive method
+```
+./train_nusc_naive.sh
+```
+### Upper bound
+```
+./train_nusc.sh
+```
+### Classifier placeholder
+- Change the path of pretrained naive model in `/config/nuScenes_ood_basic.yaml`, line 63.
+
+- Change the coefficient lamda_1 in `/config/nuScenes_ood_basic.yaml`, line 70.
+
+- Change the dummy classifier number in `/train_cylinder_asym_nuscenes_ood_basic.py`, line 197.
+```
+./train_nusc_ood_basic.sh
+```
+### Data placeholder
+
+- Change the path of pretrained naive model in `/config/nuScenes_ood_final.yaml`, line 63.
+
+- Change lamda_1, lamda_2 in `/config/nuScenes_ood_final.yaml`, line 70, 71.
+
+- Change the dummy classifier number in `/train_cylinder_asym_nuscenes_ood_final.py`, line 197.
+```
+./train_nusc_ood_final.sh
+```
+## Evaluation for nuScenes
+
+### MSP/Maxlogit
+- Change the trained model path (Naive method) in `/config/nuScenes.yaml`, line 63.
+
+- Change the saving path of in-distribution prediction results and uncertainty scores in `val_cylinder_asym_nusc.py`, line 112, 114, 116.
+```
+./val_nusc.sh
+```
+
+### Upper bound
+- Change the trained model path (Naive method) in `/config/nuScenes.yaml`, line 63.
+
+- Change the saving path of in-distribution prediction results and uncertainty scores in `val_cylinder_asym_nusc_upper.py`, line 121, 123.
+```
+./val_nusc_upper.sh
+```
+
+### Classifier/Data placeholder
+- Change the trained model path (Placeholder method) in `/config/nuScenes_ood_final.yaml`, line 63.
+
+- Change the saving path of in-distribution prediction results and uncertainty scores in `val_cylinder_asym_nusc_ood.py`, line 125, 126.
+
+```
+./val_nusc_ood.sh
 ```

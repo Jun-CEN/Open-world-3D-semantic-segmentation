@@ -19,7 +19,7 @@ def build(wce=True, lovasz=True, num_class=20, ignore_label=0):
     else:
         raise NotImplementedError
 
-def build_ood(wce=True, lovasz=True, num_class=20, ignore_label=0, weight=0.1):
+def build_ood(wce=True, lovasz=True, num_class=20, ignore_label=0, weight=1):
 
     weights = torch.ones(num_class+1).cuda()
     weights[-1] = weight
