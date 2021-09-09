@@ -529,3 +529,31 @@ class Asymm_3d_spconv(nn.Module):
         y_normal_dummy = torch.cat([y_in_normal, y_out_normal_2], dim=1)
 
         return y_ood, coor_ori, coor_perm, y_normal, y_normal_dummy
+
+    def forward_DML(self, voxel_features, coors, batch_size):
+        # x = x.contiguous()
+        coors = coors.int()
+        # import pdb
+        # pdb.set_trace()
+        coor_ori = coors.type(torch.LongTensor)
+
+        up0e_normal = self.forward_no_logits(voxel_features, coors, batch_size)
+        logits_in_normal = self.logits(up0e_normal)
+        y_in_normal = logits_in_normal.dense()  # [bs, num_cls, 480, 360, 32]
+
+        features = y_in_normal.permute(0, 2, 3, 4, 1).contiguous()
+        features_shape = features.size()
+        output = torch.zeros_like(features).cuda()
+
+        centers = torch.zeros(features_shape[-1], features_shape[-1]).cuda()
+        magnitude = 3
+        for i in range(features_shape[-1]):
+            centers[i][i] = magnitude
+
+        for i in range(features_shape[-1]):
+            dists = features - centers[i]
+            dist2mean = -torch.sum(dists ** 2, -1)
+            output[..., i] = dist2mean
+        output = output.permute(0, 4, 1, 2, 3)
+
+        return output

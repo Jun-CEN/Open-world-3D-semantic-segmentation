@@ -97,7 +97,7 @@ def main(args):
             uncertainty_scores_softmax = 1 - torch.max(softmax_layer(predict_labels), dim=1)[0]
 
             #upper bound
-            uncertainty_scores_softmax = softmax_layer(predict_labels)[:,5,...]
+            uncertainty_scores_softmax = softmax_layer(predict_labels)[:,5,...].cpu().detach().numpy()
             predict_labels = torch.argmax(predict_labels, dim=1)
             predict_labels = predict_labels.cpu().detach().numpy()
             # val_grid_ten: [batch, points, 3]
@@ -112,9 +112,9 @@ def main(args):
             # point_uncertainty_logits.tofile(
             #         '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_logits_naive/' + idx_s + '.label')
             point_uncertainty_softmax.tofile(
-                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_softmax_naive/' + idx_s + '.label')
+                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_softmax_upper/' + idx_s + '.label')
             point_predict.tofile(
-                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/predictions_naive_cross/' + idx_s + '.label')
+                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/predictions_upper/' + idx_s + '.label')
 
             for count, i_val_grid in enumerate(val_grid):
                 hist_list.append(fast_hist_crop(predict_labels[

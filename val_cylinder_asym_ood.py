@@ -121,8 +121,8 @@ def main(args):
             # point_uncertainty_logits.tofile(
             #         '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_logits_dummy_latest/' + idx_s + '.label')
             point_uncertainty_softmax.tofile(
-                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_softmax_1dummy_1_01_final/' + idx_s + '.label')
-            point_predict.tofile('/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/predictions_1dummy_1_01_final_cross/' + idx_s + '.label')
+                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_softmax_2dummy_1_01_final_latest/' + idx_s + '.label')
+            point_predict.tofile('/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/predictions_2dummy_1_01_final_cross_latest/' + idx_s + '.label')
 
             for count, i_val_grid in enumerate(val_grid):
                 hist_list.append(fast_hist_crop(predict_labels[
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('-y', '--config_path', default='config/semantickitti_ood_final.yaml')
-    parser.add_argument('--dummynumber', default=1, type=int, help='number of dummy label.')
+    parser.add_argument('--dummynumber', default=2, type=int, help='number of dummy label.')
     args = parser.parse_args()
 
     print(' '.join(sys.argv))

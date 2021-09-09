@@ -92,6 +92,15 @@ and these files will be used to calculate the closed-set mIoU and open-set metri
 ./val.sh
 ```
 
+### Upper bound
+- Change the trained model path (Placeholder method) in `/config/semantickitti.yaml`, line 63.
+
+- Change the saving path of in-distribution prediction results and uncertainty scores in `val_cylinder_asym_upper.py`, line 115, 117.
+
+```
+./val_upper.sh
+```
+
 ### Classifier/Data placeholder
 - Change the trained model path (Placeholder method) in `/config/semantickitti_ood_final.yaml`, line 63.
 

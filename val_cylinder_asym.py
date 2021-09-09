@@ -95,10 +95,6 @@ def main(args):
             uncertainty_scores_logits = uncertainty_scores_logits.cpu().detach().numpy()
             softmax_layer = torch.nn.Softmax(dim=1)
             uncertainty_scores_softmax = 1 - torch.max(softmax_layer(predict_labels), dim=1)[0]
-
-            #upper bound
-            # uncertainty_scores_softmax = softmax_layer(predict_labels)[:,5,...]
-
             uncertainty_scores_softmax = uncertainty_scores_softmax.cpu().detach().numpy()
             predict_labels = torch.argmax(predict_labels, dim=1)
             predict_labels = predict_labels.cpu().detach().numpy()

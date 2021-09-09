@@ -86,3 +86,10 @@ class cylinder_asym(nn.Module):
         spatial_features = self.cylinder_3d_spconv_seg.forward_dummy_upper(features_3d, coords, batch_size, ood_num)
 
         return spatial_features
+
+    def forward_DML(self, train_pt_fea_ten, train_vox_ten, batch_size):
+        coords, features_3d = self.cylinder_3d_generator(train_pt_fea_ten, train_vox_ten)
+
+        spatial_features = self.cylinder_3d_spconv_seg.forward_DML(features_3d, coords, batch_size)
+
+        return spatial_features
