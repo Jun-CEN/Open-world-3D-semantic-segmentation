@@ -280,7 +280,7 @@ class cylinder_dataset_panop(data.Dataset):
                  fixed_volume_space=False, max_volume_space=[50, np.pi, 2], min_volume_space=[0, -np.pi, -4],
                  scale_aug=False,
                  transform_aug=False, trans_std=[0.1, 0.1, 0.1],
-                 min_rad=-np.pi / 4, max_rad=np.pi / 4, ds_sample=True):
+                 min_rad=-np.pi / 4, max_rad=np.pi / 4, ds_sample=False, incre=None):
         self.point_cloud_dataset = in_dataset
         self.grid_size = np.asarray(grid_size)
         self.rotate_aug = rotate_aug
@@ -294,6 +294,7 @@ class cylinder_dataset_panop(data.Dataset):
         self.transform = transform_aug
         self.trans_std = trans_std
         self.ds_sample = ds_sample
+        self.incre = incre
 
         self.noise_rotation = np.random.uniform(min_rad, max_rad)
 
@@ -340,8 +341,12 @@ class cylinder_dataset_panop(data.Dataset):
             inst_basic_idx = cls[cnt >= minimum_pts_thre][1:]
             for instance_idx in inst_basic_idx:
                 rnd = np.random.rand()
-                if rnd > 0.5 or labels[instances == instance_idx][0]==5:
-                    continue
+                if self.incre == None:
+                    if rnd > 0.5 or labels[instances == instance_idx][0]==5:
+                        continue
+                else:
+                    if rnd > 0.2 or labels[instances == instance_idx][0]!=5:
+                        continue
                 obj_ins = xyz[instances==instance_idx]
                 obj_ins_center = np.mean(obj_ins, axis=0)
                 obj_ins = obj_ins - obj_ins_center

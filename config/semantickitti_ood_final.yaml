@@ -27,7 +27,7 @@ dataset_params:
   ignore_label: 0
   return_test: False
   fixed_volume_space: True
-  label_mapping: "./config/label_mapping/semantic-kitti.yaml"
+  label_mapping: "../config/label_mapping/semantic-kitti.yaml"
   max_volume_space:
     - 50
     - 3.1415926
@@ -61,8 +61,8 @@ val_data_loader:
 ## Train params
 train_params:
   model_load_path: "/harddisk/jcenaa/semantic_kitti/checkpoints/model_load.pt"
-  model_save_path: "/harddisk/jcenaa/semantic_kitti/checkpoints/model_save_2dummy_1_01_final.pt"
-  model_latest_path: "/harddisk/jcenaa/semantic_kitti/checkpoints/model_latest_2dummy_1_01_final.pt"
+  model_save_path: "/harddisk/jcenaa/semantic_kitti/checkpoints/model_save_incre.pt"
+  model_latest_path: "/harddisk/jcenaa/semantic_kitti/checkpoints/model_latest_incre.pt"
   checkpoint_every_n_steps: 4599
   max_num_epochs: 10
   eval_every_n_steps: 4599

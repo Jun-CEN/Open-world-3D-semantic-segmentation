@@ -54,6 +54,7 @@
 ```
 
 ## Training for SemanticKITTI
+All scripts for SemanticKITTI dataset is in `semantickitti_scripts`.
 ### Naive method
 ```
 ./train_naive.sh
@@ -81,6 +82,13 @@
 ```
 ./train_ood_final.sh
 ```
+
+### MC-Dropout
+
+```
+./train_dropout.sh
+```
+
 ## Evaluation for SemanticKITTI
 We save the in-distribution prediction labels and uncertainty scores for every points in the validation set, 
 and these files will be used to calculate the closed-set mIoU and open-set metrics including AUPR, AURPC, and FPR95.
@@ -109,6 +117,12 @@ and these files will be used to calculate the closed-set mIoU and open-set metri
 ```
 ./val_ood.sh
 ```
+
+### MC-Dropout
+```
+./val_dropout.sh
+```
+
 ## Training for nuScenes
 ### Naive method
 ```
@@ -137,6 +151,12 @@ and these files will be used to calculate the closed-set mIoU and open-set metri
 ```
 ./train_nusc_ood_final.sh
 ```
+
+### MC-Dropout
+```
+./train_nusc_dropout.sh
+```
+
 ## Evaluation for nuScenes
 
 ### MSP/Maxlogit
@@ -162,4 +182,9 @@ and these files will be used to calculate the closed-set mIoU and open-set metri
 
 ```
 ./val_nusc_ood.sh
+```
+
+### MC-Dropout
+```
+./val_nusc_dropout.sh
 ```

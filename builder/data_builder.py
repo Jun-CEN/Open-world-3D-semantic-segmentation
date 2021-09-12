@@ -11,7 +11,8 @@ def build(dataset_config,
           train_dataloader_config,
           val_dataloader_config,
           grid_size=[480, 360, 32],
-          distribute=False):
+          distribute=False,
+          incre=None):
     data_path = train_dataloader_config["data_path"]
     train_imageset = train_dataloader_config["imageset"]
     val_imageset = val_dataloader_config["imageset"]
@@ -43,7 +44,8 @@ def build(dataset_config,
         rotate_aug=True,
         scale_aug=True,
         transform_aug=True,
-        ds_sample=True
+        ds_sample=True,
+        incre = incre
     )
 
     val_dataset = get_model_class(dataset_config['dataset_type'])(
@@ -54,7 +56,7 @@ def build(dataset_config,
         min_volume_space=dataset_config['min_volume_space'],
         ignore_label=dataset_config["ignore_label"],
         return_test=True,
-        ds_sample=False
+        ds_sample=False,
     )
 
     if distribute:

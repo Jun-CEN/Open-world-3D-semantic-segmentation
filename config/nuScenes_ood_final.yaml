@@ -27,7 +27,7 @@ dataset_params:
   ignore_label: 0
   return_test: False
   fixed_volume_space: True
-  label_mapping: "./config/label_mapping/nuscenes.yaml"
+  label_mapping: "../config/label_mapping/nuscenes.yaml"
   max_volume_space:
     - 50
     - 3.1415926
@@ -60,12 +60,12 @@ val_data_loader:
 ###################
 ## Train params
 train_params:
-  model_load_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_latest_1_001.pt"
-  model_save_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_save_1_0.pt"
-  model_latest_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_latest_1_0.pt"
+  model_load_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_load.pt"
+  model_save_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_save_incre_1.pt"
+  model_latest_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_latest_incre_1.pt"
   checkpoint_every_n_steps: 4599
   max_num_epochs: 10
   eval_every_n_steps: 4599
   learning_rate: 0.001
-  lamda_1: 0
+  lamda_1: 0.01
   lamda_2: 1

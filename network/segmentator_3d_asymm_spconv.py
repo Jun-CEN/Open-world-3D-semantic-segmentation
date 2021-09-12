@@ -245,6 +245,45 @@ class ReconBlock(nn.Module):
 
         return shortcut
 
+class ReconBlock_dropout(nn.Module):
+    def __init__(self, in_filters, out_filters, kernel_size=(3, 3, 3), stride=1, indice_key=None):
+        super(ReconBlock_dropout, self).__init__()
+        self.conv1 = conv3x1x1(in_filters, out_filters, indice_key=indice_key + "bef")
+        self.bn0 = nn.BatchNorm1d(out_filters)
+        self.act1 = nn.Sigmoid()
+        self.dropout1 = nn.Dropout(p=0.5, inplace=False)
+
+        self.conv1_2 = conv1x3x1(in_filters, out_filters, indice_key=indice_key + "bef")
+        self.bn0_2 = nn.BatchNorm1d(out_filters)
+        self.act1_2 = nn.Sigmoid()
+        self.dropout2 = nn.Dropout(p=0.5, inplace=False)
+
+        self.conv1_3 = conv1x1x3(in_filters, out_filters, indice_key=indice_key + "bef")
+        self.bn0_3 = nn.BatchNorm1d(out_filters)
+        self.act1_3 = nn.Sigmoid()
+        self.dropout3 = nn.Dropout(p=0.5, inplace=False)
+
+    def forward(self, x):
+        shortcut = self.conv1(x)
+        shortcut.features = self.bn0(shortcut.features)
+        shortcut.features = self.act1(shortcut.features)
+        shortcut.features = self.dropout1(shortcut.features)
+
+        shortcut2 = self.conv1_2(x)
+        shortcut2.features = self.bn0_2(shortcut2.features)
+        shortcut2.features = self.act1_2(shortcut2.features)
+        shortcut2.features = self.dropout2(shortcut2.features)
+
+        shortcut3 = self.conv1_3(x)
+        shortcut3.features = self.bn0_3(shortcut3.features)
+        shortcut3.features = self.act1_3(shortcut3.features)
+        shortcut3.features = self.dropout3(shortcut3.features)
+        shortcut.features = shortcut.features + shortcut2.features + shortcut3.features
+
+        shortcut.features = shortcut.features * x.features
+
+        return shortcut
+
 
 class Asymm_3d_spconv(nn.Module):
     def __init__(self,
@@ -276,6 +315,7 @@ class Asymm_3d_spconv(nn.Module):
         self.upBlock3 = UpBlock(4 * init_size, 2 * init_size, indice_key="up3", up_key="down2")
 
         self.ReconNet = ReconBlock(2 * init_size, 2 * init_size, indice_key="recon")
+        self.ReconNet_dropout = ReconBlock_dropout(2 * init_size, 2 * init_size, indice_key="recon_dropout")
 
         self.logits = spconv.SubMConv3d(4 * init_size, nclasses, indice_key="logit", kernel_size=3, stride=1, padding=1,
                                         bias=True)
@@ -557,3 +597,84 @@ class Asymm_3d_spconv(nn.Module):
         output = output.permute(0, 4, 1, 2, 3)
 
         return output
+
+    def forward_dropout(self, voxel_features, coors, batch_size):
+        # x = x.contiguous()
+        coors = coors.int()
+        # import pdb
+        # pdb.set_trace()
+        ret = spconv.SparseConvTensor(voxel_features, coors, self.sparse_shape,
+                                      batch_size)
+        ret = self.downCntx(ret)
+        down1c, down1b = self.resBlock2(ret)
+        down2c, down2b = self.resBlock3(down1c)
+        down3c, down3b = self.resBlock4(down2c)
+        down4c, down4b = self.resBlock5(down3c)
+
+
+        up4e = self.upBlock0(down4c, down4b)
+        up3e = self.upBlock1(up4e, down3b)
+        up2e = self.upBlock2(up3e, down2b)
+        up1e = self.upBlock3(up2e, down1b)
+
+        up0e = self.ReconNet_dropout(up1e)
+
+        up0e.features = torch.cat((up0e.features, up1e.features), 1)
+        logits = self.logits(up0e)
+        y = logits.dense()
+
+        return y
+
+    def forward_dropout_eval(self, voxel_features, coors, batch_size):
+        # x = x.contiguous()
+        coors = coors.int()
+        # import pdb
+        # pdb.set_trace()
+        ret = spconv.SparseConvTensor(voxel_features, coors, self.sparse_shape,
+                                      batch_size)
+        ret = self.downCntx(ret)
+        down1c, down1b = self.resBlock2(ret)
+        down2c, down2b = self.resBlock3(down1c)
+        down3c, down3b = self.resBlock4(down2c)
+        down4c, down4b = self.resBlock5(down3c)
+
+
+        up4e = self.upBlock0(down4c, down4b)
+        up3e = self.upBlock1(up4e, down3b)
+        up2e = self.upBlock2(up3e, down2b)
+        up1e = self.upBlock3(up2e, down1b)
+
+        repeat_cnt = 5
+        y_final = None
+        for i in range(repeat_cnt):
+            up0e = self.ReconNet_dropout(up1e)
+
+            up0e.features = torch.cat((up0e.features, up1e.features), 1)
+            logits = self.logits(up0e)
+            y = logits.dense()
+            if y_final is None:
+                y_final = y
+            else:
+                y_final = torch.cat([y_final, y], dim=0)
+
+        return y_final
+
+    def forward_incremental(self, voxel_features, coors, batch_size):
+        # x = x.contiguous()
+        coors = coors.int()
+        # import pdb
+        # pdb.set_trace()
+        coor_ori = coors.type(torch.LongTensor)
+
+        up0e_normal = self.forward_no_logits(voxel_features, coors, batch_size)
+        logits_in_normal = self.logits(up0e_normal)
+        y_in = logits_in_normal.dense()
+        y_out = self.logits2(up0e_normal).dense()
+
+        y_out_incre= y_out[:,0,...].unsqueeze(1)
+        y_out_dummy, _ = torch.max(y_out[:,1:,...], dim=1, keepdim=True)
+        y_out_dummy = torch.cat([y_in, y_out_dummy], dim=1)
+        y_out_dummy = torch.cat([y_out_dummy, y_out_incre], dim=1)
+        y_eval = torch.cat([y_in, y_out_incre], dim=1)
+
+        return coor_ori, y_in, y_out_dummy, y_eval
