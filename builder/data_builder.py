@@ -3,7 +3,7 @@
 # @file: data_builder.py 
 
 import torch
-from dataloader.dataset_semantickitti import get_model_class, collate_fn_BEV, collate_fn_BEV_test
+from dataloader.dataset_semantickitti import get_model_class, collate_fn_BEV, collate_fn_BEV_test, collate_fn_BEV_val, collate_fn_BEV_incre
 from dataloader.pc_dataset import get_pc_model_class
 
 
@@ -11,7 +11,6 @@ def build(dataset_config,
           train_dataloader_config,
           val_dataloader_config,
           grid_size=[480, 360, 32],
-          distribute=False,
           incre=None):
     data_path = train_dataloader_config["data_path"]
     train_imageset = train_dataloader_config["imageset"]
@@ -59,28 +58,18 @@ def build(dataset_config,
         ds_sample=False,
     )
 
-    if distribute:
-        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
-        train_dataset_loader = torch.utils.data.DataLoader(dataset=train_dataset,
-                                                           batch_size=train_dataloader_config["batch_size"],
-                                                           collate_fn=collate_fn_BEV,
-                                                           shuffle=True,
-                                                           num_workers=train_dataloader_config["num_workers"],
-                                                           pin_memory=True,
-                                                           drop_last=True,
-                                                           sampler=train_sampler)
-    else:
-        train_dataset_loader = torch.utils.data.DataLoader(dataset=train_dataset,
-                                                           batch_size=train_dataloader_config["batch_size"],
-                                                           collate_fn=collate_fn_BEV,
-                                                           shuffle=train_dataloader_config["shuffle"],
-                                                           num_workers=train_dataloader_config["num_workers"],
-                                                           pin_memory=False,
-                                                           drop_last=True)
+    train_dataset_loader = torch.utils.data.DataLoader(dataset=train_dataset,
+                                                       batch_size=train_dataloader_config["batch_size"],
+                                                       collate_fn=collate_fn_BEV_incre if incre is not None else collate_fn_BEV,
+                                                       shuffle=train_dataloader_config["shuffle"],
+                                                       num_workers=train_dataloader_config["num_workers"],
+                                                       pin_memory=False,
+                                                       drop_last=True)
     val_dataset_loader = torch.utils.data.DataLoader(dataset=val_dataset,
                                                      batch_size=val_dataloader_config["batch_size"],
-                                                     collate_fn=collate_fn_BEV_test,
+                                                     collate_fn=collate_fn_BEV_val,
                                                      shuffle=val_dataloader_config["shuffle"],
                                                      num_workers=val_dataloader_config["num_workers"],
                                                      pin_memory=False)
+
     return train_dataset_loader, val_dataset_loader

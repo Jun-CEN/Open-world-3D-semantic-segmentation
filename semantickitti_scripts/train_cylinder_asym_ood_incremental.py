@@ -91,7 +91,7 @@ def main(args):
         pbar = tqdm(total=len(train_dataset_loader))
         time.sleep(10)
         # lr_scheduler.step(epoch)
-        for i_iter, (_, train_vox_label, train_grid, _, train_pt_fea) in enumerate(train_dataset_loader):
+        for i_iter, (_, train_vox_label, train_grid, _, train_pt_fea, dis_labels) in enumerate(train_dataset_loader):
             if global_iter % check_iter == 0 and epoch >= 1:
                 my_model.eval()
                 hist_list = []
@@ -143,6 +143,7 @@ def main(args):
             # train_grid_ten = [torch.from_numpy(i[:,:2]).to(pytorch_device) for i in train_grid]
             train_vox_ten = [torch.from_numpy(i).to(pytorch_device) for i in train_grid]
             point_label_tensor = train_vox_label.type(torch.LongTensor).to(pytorch_device)
+            dis_label_tensor = dis_labels.type(torch.LongTensor).to(pytorch_device)
 
             point_label_tensor[point_label_tensor == 5] = 21
             if 21 not in torch.unique(point_label_tensor):
@@ -160,14 +161,12 @@ def main(args):
             coor_ori, y_in, y_normal_dummy, _ = my_model.forward_incremental(train_pt_fea_ten, train_vox_ten, train_batch_size)
 
             voxel_label_origin = point_label_tensor[coor_ori.permute(1,0).chunk(chunks=4, dim=0)].squeeze()
+            dis_label_origin = dis_label_tensor[coor_ori.permute(1, 0).chunk(chunks=4, dim=0)].squeeze()
 
-            y_in = y_in.permute(0,2,3,4,1)
-            y_in = y_in[coor_ori.permute(1,0).chunk(chunks=4, dim=0)].squeeze()
-            y_in_label = torch.argmax(y_in, dim=1)
-            valid = voxel_label_origin != 0
-            y_in_label = y_in_label[valid]
+            valid = voxel_label_origin > 0
+            dis_label_origin = dis_label_origin[valid]
             voxel_label_origin = voxel_label_origin[valid]
-            voxel_label_origin[voxel_label_origin < 20] = y_in_label[voxel_label_origin < 20]
+            voxel_label_origin[voxel_label_origin < 20] = dis_label_origin[voxel_label_origin < 20]
 
             output_normal_dummy = y_normal_dummy.permute(0,2,3,4,1)
             output_normal_dummy = output_normal_dummy[coor_ori.permute(1,0).chunk(chunks=4, dim=0)].squeeze()
@@ -217,7 +216,7 @@ def main(args):
 if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('-y', '--config_path', default='../config/semantickitti_ood_final.yaml')
+    parser.add_argument('-y', '--config_path', default='../config/semantickitti_ood_incre.yaml')
     parser.add_argument('--dummynumber', default=3, type=int, help='number of dummy label.')
     args = parser.parse_args()
 

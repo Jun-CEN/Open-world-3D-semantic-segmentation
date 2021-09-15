@@ -89,6 +89,9 @@ class SemKITTI_sk(data.Dataset):
     def __getitem__(self, index):
         raw_data = np.fromfile(self.im_idx[index], dtype=np.float32).reshape((-1, 4))
         if self.imageset == 'test':
+            path_save = self.im_idx[index].replace('velodyne', 'predictions')
+            path_save = path_save.replace('bin','label')
+            path_save = path_save.replace('dataset', 'predictions_test/predictions_incre')
             annotated_data = np.expand_dims(np.zeros_like(raw_data[:, 0], dtype=int), axis=1)
         else:
             annotated_data = np.fromfile(self.im_idx[index].replace('velodyne', 'labels')[:-3] + 'label',
@@ -99,7 +102,11 @@ class SemKITTI_sk(data.Dataset):
         data_tuple = (raw_data[:, :3], annotated_data.astype(np.uint8))
         if self.return_ref:
             data_tuple += (raw_data[:, 3],)
-        return data_tuple
+
+        if self.imageset == 'test':
+            return data_tuple, path_save
+        else:
+            return data_tuple
 
 @register_dataset
 class SemKITTI_sk_panop(data.Dataset):
@@ -143,6 +150,60 @@ class SemKITTI_sk_panop(data.Dataset):
             data_tuple += (raw_data[:, 3],)
         return data_tuple
 
+@register_dataset
+class SemKITTI_sk_panop_incre(data.Dataset):
+    def __init__(self, data_path, imageset='train',
+                 return_ref=False, label_mapping="semantic-kitti.yaml", nusc=None):
+        self.return_ref = return_ref
+        with open(label_mapping, 'r') as stream:
+            semkittiyaml = yaml.safe_load(stream)
+        self.learning_map = semkittiyaml['learning_map']
+        self.imageset = imageset
+        if imageset == 'train':
+            split = semkittiyaml['split']['train']
+        elif imageset == 'val':
+            split = semkittiyaml['split']['valid']
+        elif imageset == 'test':
+            split = semkittiyaml['split']['test']
+        else:
+            raise Exception('Split must be train/val/test')
+
+        self.im_idx = []
+        for i_folder in split:
+            self.im_idx += absoluteFilePaths('/'.join([data_path, str(i_folder).zfill(2), 'velodyne']))
+
+        self.pred_names = []
+        pred_paths = "/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/predictions_base_train"
+        # populate the label names
+        seq_pred_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
+            os.path.expanduser(pred_paths)) for f in fn if ".label" in f]
+        seq_pred_names.sort()
+        self.pred_names.extend(seq_pred_names)
+
+    def __len__(self):
+        'Denotes the total number of samples'
+        return len(self.im_idx)
+
+    def __getitem__(self, index):
+        raw_data = np.fromfile(self.im_idx[index], dtype=np.float32).reshape((-1, 4))
+        if self.imageset == 'test':
+            annotated_data = np.expand_dims(np.zeros_like(raw_data[:, 0], dtype=int), axis=1)
+        else:
+            annotated_data = np.fromfile(self.im_idx[index].replace('velodyne', 'labels')[:-3] + 'label',
+                                         dtype=np.uint32).reshape((-1, 1))
+            semantic_data = annotated_data & 0xFFFF
+            instance_data = annotated_data >> 16
+            semantic_data = np.vectorize(self.learning_map.__getitem__)(semantic_data)
+
+        distill_label_path = self.pred_names[index]
+        distill_label = np.fromfile(distill_label_path, dtype=np.int32)
+        distill_label = distill_label.reshape([-1, 1])
+
+        data_tuple = (raw_data[:, :3], semantic_data.astype(np.uint8), instance_data.astype(np.uint8), distill_label.astype(np.uint8))
+        if self.return_ref:
+            data_tuple += (raw_data[:, 3],)
+        return data_tuple
+
 
 @register_dataset
 class SemKITTI_nusc_panop(data.Dataset):
@@ -179,6 +240,57 @@ class SemKITTI_nusc_panop(data.Dataset):
         points = np.fromfile(os.path.join(self.data_path, lidar_path), dtype=np.float32, count=-1).reshape([-1, 5])
 
         data_tuple = (points[:, :3], sem_label.astype(np.uint8), inst_label.astype(np.uint8))
+        if self.return_ref:
+            data_tuple += (points[:, 3],)
+        return data_tuple
+
+@register_dataset
+class SemKITTI_nusc_panop_incre(data.Dataset):
+    def __init__(self, data_path, imageset='train',
+                 return_ref=False, label_mapping="nuscenes.yaml", nusc=None):
+        self.return_ref = return_ref
+
+        with open(imageset, 'rb') as f:
+            data = pickle.load(f)
+
+        with open(label_mapping, 'r') as stream:
+            nuscenesyaml = yaml.safe_load(stream)
+        self.learning_map = nuscenesyaml['learning_map']
+
+        self.nusc_infos = data['infos']
+        self.data_path = data_path
+        self.nusc = nusc
+
+        self.pred_names = []
+        pred_paths = os.path.join(self.data_path, "predictions", "predictions_inre1_train")
+        # populate the label names
+        seq_pred_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
+            os.path.expanduser(pred_paths)) for f in fn if ".label" in f]
+        seq_pred_names.sort()
+        self.pred_names.extend(seq_pred_names)
+
+    def __len__(self):
+        'Denotes the total number of samples'
+        return len(self.nusc_infos)
+
+    def __getitem__(self, index):
+        info = self.nusc_infos[index]
+        lidar_path = info['lidar_path'][16:]
+        lidar_sd_token = self.nusc.get('sample', info['token'])['data']['LIDAR_TOP']
+        lidarseg_labels_filename = os.path.join(self.nusc.dataroot,
+                                                self.nusc.get('panoptic', lidar_sd_token)['filename'])
+
+        points_label = np.load(lidarseg_labels_filename)['data'].reshape([-1, 1])
+        sem_label = (points_label // 1000).astype(np.uint8)
+        inst_label = (points_label % 1000).astype(np.uint8)
+        sem_label = np.vectorize(self.learning_map.__getitem__)(sem_label)
+        points = np.fromfile(os.path.join(self.data_path, lidar_path), dtype=np.float32, count=-1).reshape([-1, 5])
+
+        distill_label_path = self.pred_names[index]
+        distill_label = np.fromfile(distill_label_path, dtype=np.int32)
+        distill_label = distill_label.reshape([-1, 1])
+
+        data_tuple = (points[:, :3], sem_label.astype(np.uint8), inst_label.astype(np.uint8), distill_label.astype(np.uint8))
         if self.return_ref:
             data_tuple += (points[:, 3],)
         return data_tuple

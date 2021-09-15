@@ -80,7 +80,7 @@ def main(args):
     pbar = tqdm(total=len(val_dataset_loader))
     global_iter = 0
     with torch.no_grad():
-        for i_iter_val, (_, val_vox_label, val_grid, val_pt_labs, val_pt_fea, idx) in enumerate(
+        for i_iter_val, (_, val_vox_label, val_grid, val_pt_labs, val_pt_fea, path_save) in enumerate(
                 val_dataset_loader):
 
             val_pt_fea_ten = [torch.from_numpy(i).type(torch.FloatTensor).to(pytorch_device) for i in
@@ -107,13 +107,7 @@ def main(args):
             point_predict = predict_labels[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]].astype(np.int32)
             point_uncertainty_logits = uncertainty_scores_logits[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]]
             point_uncertainty_softmax = uncertainty_scores_softmax[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]]
-            idx_s = "%06d" % idx[0]
-            # point_uncertainty_logits.tofile(
-            #         '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_logits_naive/' + idx_s + '.label')
-            # point_uncertainty_softmax.tofile(
-            #     '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_softmax_19/' + idx_s + '.label')
-            point_predict.tofile(
-                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/predictions_incre/' + idx_s + '.label')
+            point_predict.tofile(path_save[0])
 
             for count, i_val_grid in enumerate(val_grid):
                 hist_list.append(fast_hist_crop(predict_labels[
@@ -138,7 +132,7 @@ def main(args):
 if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('-y', '--config_path', default='../config/semantickitti.yaml')
+    parser.add_argument('-y', '--config_path', default='../config/semantickitti_test.yaml')
     args = parser.parse_args()
 
     print(' '.join(sys.argv))

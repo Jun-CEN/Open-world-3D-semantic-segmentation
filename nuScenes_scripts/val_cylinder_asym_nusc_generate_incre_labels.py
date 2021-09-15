@@ -18,7 +18,7 @@ from dataloader.pc_dataset import get_SemKITTI_label_name
 from builder import data_builder, model_builder, loss_builder
 from config.config import load_config_data
 
-from utils.load_save_util import load_checkpoint
+from utils.load_save_util import load_checkpoint, load_checkpoint_1b1
 
 import warnings
 from shutil import copyfile
@@ -56,7 +56,7 @@ def main(args):
 
     my_model = model_builder.build(model_config)
     if os.path.exists(model_load_path):
-        my_model = load_checkpoint(model_load_path, my_model)
+        my_model = load_checkpoint_1b1(model_load_path, my_model)
         print('Load checkpoint file successfully!')
 
     my_model.to(pytorch_device)
@@ -95,6 +95,7 @@ def main(args):
             uncertainty_scores_logits = -torch.max(predict_labels, dim=1)[0]
             uncertainty_scores_logits = uncertainty_scores_logits.cpu().detach().numpy()
             softmax_layer = torch.nn.Softmax(dim=1)
+
             uncertainty_scores_softmax = 1 - torch.max(softmax_layer(predict_labels), dim=1)[0]
             uncertainty_scores_softmax = uncertainty_scores_softmax.cpu().detach().numpy()
             predict_labels = torch.argmax(predict_labels, dim=1)
@@ -109,11 +110,11 @@ def main(args):
             point_uncertainty_softmax = uncertainty_scores_softmax[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]]
             idx_s = "%06d" % idx[0]
             # point_uncertainty_logits.tofile(
-            #         '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_logits_naive/' + idx_s + '.label')
+            #         '/harddisk/jcenaa/nuScenes/predictions/scores_logits_base/' + idx_s + '.label')
             # point_uncertainty_softmax.tofile(
-            #     '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/scores_softmax_19/' + idx_s + '.label')
+            #     '/harddisk/jcenaa/nuScenes/predictions/scores_softmax_upper/' + idx_s + '.label')
             point_predict.tofile(
-                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/predictions_incre/' + idx_s + '.label')
+                '/harddisk/jcenaa/nuScenes/predictions/predictions_base_train/' + idx_s + '.label')
 
             for count, i_val_grid in enumerate(val_grid):
                 hist_list.append(fast_hist_crop(predict_labels[
@@ -138,7 +139,7 @@ def main(args):
 if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('-y', '--config_path', default='../config/semantickitti.yaml')
+    parser.add_argument('-y', '--config_path', default='../config/nuScenes_ood_generate_incre_labels.yaml')
     args = parser.parse_args()
 
     print(' '.join(sys.argv))

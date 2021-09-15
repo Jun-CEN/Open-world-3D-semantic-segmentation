@@ -7,6 +7,7 @@ import os
 import time
 import argparse
 import sys
+sys.path.append("..")
 import numpy as np
 import torch
 import torch.optim as optim
@@ -92,7 +93,7 @@ def main(args):
         pbar = tqdm(total=len(train_dataset_loader))
         time.sleep(10)
         for i_iter, (_, train_vox_label, train_grid, _, train_pt_fea) in enumerate(train_dataset_loader):
-            if global_iter % check_iter == 0 and epoch >= 1:
+            if global_iter % check_iter == 0 and epoch >= 0:
                 pbar_val = tqdm(total=len(val_dataset_loader))
                 my_model.eval()
                 hist_list = []
@@ -111,6 +112,11 @@ def main(args):
                                               ignore=0) + loss_func_val(predict_labels.detach(), val_label_tensor)
                         predict_labels = torch.argmax(predict_labels, dim=1)
                         predict_labels = predict_labels.cpu().detach().numpy()
+                        count=0
+                        print(np.unique(predict_labels[
+                                                                count, val_grid[count][:, 0], val_grid[count][:, 1],
+                                                                val_grid[count][:, 2]], return_counts=True))
+                        print(np.unique(val_pt_labs[count], return_counts=True))
                         for count, i_val_grid in enumerate(val_grid):
                             hist_list.append(fast_hist_crop(predict_labels[
                                                                 count, val_grid[count][:, 0], val_grid[count][:, 1],
@@ -194,7 +200,7 @@ def main(args):
 if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('-y', '--config_path', default='config/nuScenes_ood_final.yaml')
+    parser.add_argument('-y', '--config_path', default='../config/nuScenes_ood_final.yaml')
     parser.add_argument('--dummynumber', default=3, type=int, help='number of dummy label.')
     args = parser.parse_args()
 

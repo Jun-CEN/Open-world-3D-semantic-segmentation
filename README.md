@@ -53,17 +53,18 @@
     ├──v1.0-test/
 ```
 
-## Training for SemanticKITTI
-All scripts for SemanticKITTI dataset is in `semantickitti_scripts`.
-### Naive method
+## Open-set semantic segmentation
+### Training for SemanticKITTI
+All scripts for SemanticKITTI dataset is in `./semantickitti_scripts`.
+#### Naive method
 ```
 ./train_naive.sh
 ```
-### Upper bound
+#### Upper bound
 ```
 ./train_upper.sh
 ```
-### Classifier placeholder
+#### Classifier placeholder
 - Change the path of pretrained naive model in `/config/semantickitti_ood_basic.yaml`, line 63.
 
 - Change the coefficient lamda_1 in `/config/semantickitti_ood_basic.yaml`, line 70.
@@ -72,7 +73,7 @@ All scripts for SemanticKITTI dataset is in `semantickitti_scripts`.
 ```
 ./train_ood_basic.sh
 ```
-### Data placeholder
+#### Data placeholder
 
 - Change the path of pretrained naive model in `/config/semantickitti_ood_final.yaml`, line 63.
 
@@ -83,16 +84,16 @@ All scripts for SemanticKITTI dataset is in `semantickitti_scripts`.
 ./train_ood_final.sh
 ```
 
-### MC-Dropout
+#### MC-Dropout
 
 ```
 ./train_dropout.sh
 ```
 
-## Evaluation for SemanticKITTI
+### Evaluation for SemanticKITTI
 We save the in-distribution prediction labels and uncertainty scores for every points in the validation set, 
 and these files will be used to calculate the closed-set mIoU and open-set metrics including AUPR, AURPC, and FPR95.
-### MSP/Maxlogit
+#### MSP/Maxlogit
 - Change the trained model path (Naive method) in `/config/semantickitti.yaml`, line 63.
 
 - Change the saving path of in-distribution prediction results and uncertainty scores in `val_cylinder_asym.py`, line 112, 114, 116.
@@ -100,7 +101,7 @@ and these files will be used to calculate the closed-set mIoU and open-set metri
 ./val.sh
 ```
 
-### Upper bound
+#### Upper bound
 - Change the trained model path (Placeholder method) in `/config/semantickitti.yaml`, line 63.
 
 - Change the saving path of in-distribution prediction results and uncertainty scores in `val_cylinder_asym_upper.py`, line 115, 117.
@@ -109,7 +110,7 @@ and these files will be used to calculate the closed-set mIoU and open-set metri
 ./val_upper.sh
 ```
 
-### Classifier/Data placeholder
+#### Classifier/Data placeholder
 - Change the trained model path (Placeholder method) in `/config/semantickitti_ood_final.yaml`, line 63.
 
 - Change the saving path of in-distribution prediction results and uncertainty scores in `val_cylinder_asym_ood.py`, line 124, 125.
@@ -118,21 +119,22 @@ and these files will be used to calculate the closed-set mIoU and open-set metri
 ./val_ood.sh
 ```
 
-### MC-Dropout
+#### MC-Dropout
 ```
 ./val_dropout.sh
 ```
 
-## Training for nuScenes
-### Naive method
+### Training for nuScenes
+All scripts for nuScenes dataset are in `./nuScenes_scripts`
+#### Naive method
 ```
 ./train_nusc_naive.sh
 ```
-### Upper bound
+#### Upper bound
 ```
 ./train_nusc.sh
 ```
-### Classifier placeholder
+#### Classifier placeholder
 - Change the path of pretrained naive model in `/config/nuScenes_ood_basic.yaml`, line 63.
 
 - Change the coefficient lamda_1 in `/config/nuScenes_ood_basic.yaml`, line 70.
@@ -141,7 +143,7 @@ and these files will be used to calculate the closed-set mIoU and open-set metri
 ```
 ./train_nusc_ood_basic.sh
 ```
-### Data placeholder
+#### Data placeholder
 
 - Change the path of pretrained naive model in `/config/nuScenes_ood_final.yaml`, line 63.
 
@@ -152,14 +154,14 @@ and these files will be used to calculate the closed-set mIoU and open-set metri
 ./train_nusc_ood_final.sh
 ```
 
-### MC-Dropout
+#### MC-Dropout
 ```
 ./train_nusc_dropout.sh
 ```
 
-## Evaluation for nuScenes
+### Evaluation for nuScenes
 
-### MSP/Maxlogit
+#### MSP/Maxlogit
 - Change the trained model path (Naive method) in `/config/nuScenes.yaml`, line 63.
 
 - Change the saving path of in-distribution prediction results and uncertainty scores in `val_cylinder_asym_nusc.py`, line 112, 114, 116.
@@ -167,7 +169,7 @@ and these files will be used to calculate the closed-set mIoU and open-set metri
 ./val_nusc.sh
 ```
 
-### Upper bound
+#### Upper bound
 - Change the trained model path (Naive method) in `/config/nuScenes.yaml`, line 63.
 
 - Change the saving path of in-distribution prediction results and uncertainty scores in `val_cylinder_asym_nusc_upper.py`, line 121, 123.
@@ -175,7 +177,7 @@ and these files will be used to calculate the closed-set mIoU and open-set metri
 ./val_nusc_upper.sh
 ```
 
-### Classifier/Data placeholder
+#### Classifier/Data placeholder
 - Change the trained model path (Placeholder method) in `/config/nuScenes_ood_final.yaml`, line 63.
 
 - Change the saving path of in-distribution prediction results and uncertainty scores in `val_cylinder_asym_nusc_ood.py`, line 125, 126.
@@ -184,7 +186,37 @@ and these files will be used to calculate the closed-set mIoU and open-set metri
 ./val_nusc_ood.sh
 ```
 
-### MC-Dropout
+#### MC-Dropout
 ```
 ./val_nusc_dropout.sh
 ```
+
+## Incremental learning
+### Training for SemanticKITTI
+All scripts for SemanticKITTI dataset is in `./semantickitti_scripts`.
+
+First, use the trained base model to generate and save the pseudo labels of the training set:
+```
+./val_generate_incre_labels.sh
+```
+- Change the trained model path in `/config/semantickitti_ood_generate_incre_labels.yaml`, line 63
+- Change the save path of pseudo labels in `val_cylinder_asym_generate_incre_labels.py`, line 116
+
+Then, change the loading path of pseudo labels in `/dataloader/pc_dataset.py`, line 265.
+
+Now, conduct incremental learing using pseudo labels:
+```
+./train_cylinder_asym_ood_incremental.py
+```
+- Change the trained model path in `/config/semantickitti_ood_incre.yaml`, line 63.
+
+### Evaluation for SemanticKITTI
+For validation set:
+```
+./val_incre.sh
+```
+For test set:
+```
+./test_incre.sh
+```
+- Change the `collate_fn=collate_fn_BEV_val_test` in `/builder/data_builder.py`, line 70.

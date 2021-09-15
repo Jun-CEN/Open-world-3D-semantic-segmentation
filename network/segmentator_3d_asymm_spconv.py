@@ -659,7 +659,7 @@ class Asymm_3d_spconv(nn.Module):
 
         return y_final
 
-    def forward_incremental(self, voxel_features, coors, batch_size):
+    def forward_incremental(self, voxel_features, coors, batch_size, incre_cls=None):
         # x = x.contiguous()
         coors = coors.int()
         # import pdb
@@ -671,10 +671,27 @@ class Asymm_3d_spconv(nn.Module):
         y_in = logits_in_normal.dense()
         y_out = self.logits2(up0e_normal).dense()
 
-        y_out_incre= y_out[:,0,...].unsqueeze(1)
-        y_out_dummy, _ = torch.max(y_out[:,1:,...], dim=1, keepdim=True)
-        y_out_dummy = torch.cat([y_in, y_out_dummy], dim=1)
-        y_out_dummy = torch.cat([y_out_dummy, y_out_incre], dim=1)
-        y_eval = torch.cat([y_in, y_out_incre], dim=1)
+        if incre_cls == None:
+            y_out_incre= y_out[:,0,...].unsqueeze(1)
+            y_out_dummy, _ = torch.max(y_out[:,1:,...], dim=1, keepdim=True)
+            y_out_dummy = torch.cat([y_in, y_out_dummy], dim=1)
+            y_out_dummy = torch.cat([y_out_dummy, y_out_incre], dim=1)
+            y_eval = torch.cat([y_in, y_out_incre], dim=1)
+        else:
+            unknown_clss = [1, 5, 8, 9]
+            idx = unknown_clss.index(incre_cls) + 1
+
+            if idx != 1:
+                y_out_incre = y_out[:, 0:idx, ...]
+            else:
+                y_out_incre = y_out[:, 0, ...].unsqueeze(1)
+            if idx != 4:
+                y_out_dummy, _ = torch.max(y_out[:, idx:, ...], dim=1, keepdim=True)
+            else:
+                y_out_dummy = y_out[:,4,...]
+
+            y_out_dummy = torch.cat([y_in, y_out_dummy], dim=1)
+            y_out_dummy = torch.cat([y_out_dummy, y_out_incre], dim=1)
+            y_eval = torch.cat([y_in, y_out_incre], dim=1)
 
         return coor_ori, y_in, y_out_dummy, y_eval

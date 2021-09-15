@@ -108,9 +108,9 @@ class cylinder_asym(nn.Module):
 
         return spatial_features
 
-    def forward_incremental(self, train_pt_fea_ten, train_vox_ten, batch_size):
+    def forward_incremental(self, train_pt_fea_ten, train_vox_ten, batch_size, incre_cls=None):
         coords, features_3d = self.cylinder_3d_generator(train_pt_fea_ten, train_vox_ten)
 
-        spatial_features = self.cylinder_3d_spconv_seg.forward_incremental(features_3d, coords, batch_size)
+        spatial_features = self.cylinder_3d_spconv_seg.forward_incremental(features_3d, coords, batch_size, incre_cls)
 
         return spatial_features
