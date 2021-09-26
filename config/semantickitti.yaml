@@ -44,7 +44,7 @@ train_data_loader:
   data_path: "/harddisk/jcenaa/semantic_kitti/dataset/sequences/"
   imageset: "train"
   return_ref: True
-  batch_size: 2
+  batch_size: 3
   shuffle: True
   num_workers: 3
 
@@ -60,11 +60,11 @@ val_data_loader:
 ###################
 ## Train params
 train_params:
-  model_load_path: "/harddisk/jcenaa/semantic_kitti/checkpoints/model_save_incre.pt"
-  model_save_path: "/harddisk/jcenaa/semantic_kitti/checkpoints/model_save_dropout.pt"
-  model_latest_path: "/harddisk/jcenaa/semantic_kitti/checkpoints/model_latest_dropout.pt"
+  model_load_path: "/harddisk/jcenaa/semantic_kitti/checkpoints/model_latest_incre.pt"
+  model_save_path: "/harddisk/jcenaa/semantic_kitti/checkpoints/model_save_19_2.pt"
+  model_latest_path: "/harddisk/jcenaa/semantic_kitti/checkpoints/model_latest_19_2.pt"
   checkpoint_every_n_steps: 4599
-  max_num_epochs: 10
+  max_num_epochs: 40
   eval_every_n_steps: 4599
   learning_rate: 0.001
   lamda_1: 0

@@ -7,6 +7,7 @@ import os
 import time
 import argparse
 import sys
+sys.path.append("..")
 import numpy as np
 import torch
 import torch.optim as optim
@@ -80,7 +81,7 @@ def main(args):
         time.sleep(10)
         # lr_scheduler.step(epoch)
         for i_iter, (_, train_vox_label, train_grid, _, train_pt_fea) in enumerate(train_dataset_loader):
-            if global_iter % check_iter == 0 and epoch >= 1:
+            if global_iter % check_iter == 0 and epoch >= 0:
                 pbar_val = tqdm(total=len(val_dataset_loader))
                 my_model.eval()
                 hist_list = []
@@ -164,7 +165,7 @@ def main(args):
 if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('-y', '--config_path', default='config/semantickitti.yaml')
+    parser.add_argument('-y', '--config_path', default='../config/semantickitti.yaml')
     args = parser.parse_args()
 
     print(' '.join(sys.argv))

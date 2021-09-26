@@ -60,7 +60,7 @@ val_data_loader:
 ###################
 ## Train params
 train_params:
-  model_load_path: "/harddisk/jcenaa/semantic_kitti/checkpoints/model_save_incre.pt"
+  model_load_path: "/harddisk/jcenaa/semantic_kitti/checkpoints/model_latest_incre.pt"
   model_save_path: "/harddisk/jcenaa/semantic_kitti/checkpoints/model_save_dropout.pt"
   model_latest_path: "/harddisk/jcenaa/semantic_kitti/checkpoints/model_latest_dropout.pt"
   checkpoint_every_n_steps: 4599

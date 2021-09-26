@@ -12,6 +12,7 @@ import numpy as np
 import torch
 import torch.optim as optim
 from tqdm import tqdm
+import spconv
 
 from utils.metric_util import per_class_iu, fast_hist_crop
 from dataloader.pc_dataset import get_SemKITTI_label_name
@@ -55,6 +56,9 @@ def main(args):
     unique_label_str = [SemKITTI_label_name[x] for x in unique_label + 1]
 
     my_model = model_builder.build(model_config)
+    my_model.cylinder_3d_spconv_seg.logits2 = spconv.SubMConv3d(4 * 32, args.dummynumber, indice_key="logit",
+                                                                kernel_size=3, stride=1, padding=1,
+                                                                bias=True).to(pytorch_device)
     if os.path.exists(model_load_path):
         my_model = load_checkpoint(model_load_path, my_model)
         print('Load checkpoint file successfully!')
@@ -80,7 +84,7 @@ def main(args):
     pbar = tqdm(total=len(val_dataset_loader))
     global_iter = 0
     with torch.no_grad():
-        for i_iter_val, (_, val_vox_label, val_grid, val_pt_labs, val_pt_fea, idx) in enumerate(
+        for i_iter_val, (_, val_vox_label, val_grid, val_pt_labs, val_pt_fea, sd_token) in enumerate(
                 val_dataset_loader):
 
             val_pt_fea_ten = [torch.from_numpy(i).type(torch.FloatTensor).to(pytorch_device) for i in
@@ -88,40 +92,30 @@ def main(args):
             val_grid_ten = [torch.from_numpy(i).to(pytorch_device) for i in val_grid]
             val_label_tensor = val_vox_label.type(torch.LongTensor).to(pytorch_device)
 
-            predict_labels = my_model(val_pt_fea_ten, val_grid_ten, val_batch_size)
+            coor_ori, y_in, y_out_dummy, predict_labels = my_model.forward_incremental(val_pt_fea_ten, val_grid_ten, val_batch_size, args.incremental_class)
+
             # aux_loss = loss_fun(aux_outputs, point_label_tensor)
             loss = lovasz_softmax(torch.nn.functional.softmax(predict_labels).detach(), val_label_tensor,
                                   ignore=0) + loss_func(predict_labels.detach(), val_label_tensor)
-            uncertainty_scores_logits = -torch.max(predict_labels, dim=1)[0]
-            uncertainty_scores_logits = uncertainty_scores_logits.cpu().detach().numpy()
-            softmax_layer = torch.nn.Softmax(dim=1)
 
-            # upper-bound
-            predict_labels_softmax = softmax_layer(predict_labels)
-            print(predict_labels_softmax.shape)
-            softmax_tmp = torch.zeros(1, predict_labels_softmax.shape[2], predict_labels_softmax.shape[3], predict_labels_softmax.shape[4]).cuda()
+            predict_labels = torch.argmax(predict_labels, dim=1)
+
             unknown_clss = [1, 5, 8, 9]
             for unknown_cls in unknown_clss:
-                softmax_tmp = torch.cat((softmax_tmp, predict_labels_softmax[:,unknown_cls,...]), dim=0)
-            uncertainty_scores_softmax = torch.max(softmax_tmp, dim=0)[0].unsqueeze(0)
-            uncertainty_scores_softmax = uncertainty_scores_softmax.cpu().detach().numpy()
-            predict_labels = torch.argmax(predict_labels, dim=1)
+                predict_labels[predict_labels == unknown_cls] = 0
+                if unknown_clss.index(unknown_cls) <= unknown_clss.index(args.incremental_class):
+                    predict_labels[predict_labels == (17 + unknown_clss.index(unknown_cls))] = unknown_cls
+
             predict_labels = predict_labels.cpu().detach().numpy()
             # val_grid_ten: [batch, points, 3]
             # val_vox_label: [batch, 480, 360, 32]
             # val_pt_fea_ten: [batch, points, 9]
             # val_pt_labs: [batch, points, 1]
             count = 0
-            point_predict = predict_labels[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]].astype(np.int32)
-            point_uncertainty_logits = uncertainty_scores_logits[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]]
-            point_uncertainty_softmax = uncertainty_scores_softmax[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]]
-            idx_s = "%06d" % idx[0]
-            # point_uncertainty_logits.tofile(
-            #         '/harddisk/jcenaa/nuScenes/predictions/scores_logits_base/' + idx_s + '.label')
-            # point_uncertainty_softmax.tofile(
-            #     '/harddisk/jcenaa/nuScenes/predictions/scores_softmax_upper/' + idx_s + '.label')
+            point_predict = predict_labels[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]].astype(np.uint8)
+            idx_s = sd_token[0]
             # point_predict.tofile(
-            #     '/harddisk/jcenaa/nuScenes/predictions/predictions_upper/' + idx_s + '.label')
+            #     '/harddisk/jcenaa/nuScenes/predictions/predictions_incre_base_test/' + idx_s + '_lidarseg.bin')
 
             for count, i_val_grid in enumerate(val_grid):
                 hist_list.append(fast_hist_crop(predict_labels[
@@ -146,7 +140,9 @@ def main(args):
 if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('-y', '--config_path', default='../config/nuScenes.yaml')
+    parser.add_argument('-y', '--config_path', default='../config/nuScenes_ood_incre.yaml')
+    parser.add_argument('--dummynumber', default=5, type=int, help='number of dummy label.')
+    parser.add_argument('--incremental_class', default=8, type=int, help='incremental class')
     args = parser.parse_args()
 
     print(' '.join(sys.argv))

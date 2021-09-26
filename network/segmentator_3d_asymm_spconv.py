@@ -586,7 +586,7 @@ class Asymm_3d_spconv(nn.Module):
         output = torch.zeros_like(features).cuda()
 
         centers = torch.zeros(features_shape[-1], features_shape[-1]).cuda()
-        magnitude = 3
+        magnitude = 1
         for i in range(features_shape[-1]):
             centers[i][i] = magnitude
 
@@ -688,7 +688,7 @@ class Asymm_3d_spconv(nn.Module):
             if idx != 4:
                 y_out_dummy, _ = torch.max(y_out[:, idx:, ...], dim=1, keepdim=True)
             else:
-                y_out_dummy = y_out[:,4,...]
+                y_out_dummy = y_out[:,4,...].unsqueeze(1)
 
             y_out_dummy = torch.cat([y_in, y_out_dummy], dim=1)
             y_out_dummy = torch.cat([y_out_dummy, y_out_incre], dim=1)

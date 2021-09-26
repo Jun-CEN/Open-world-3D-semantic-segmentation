@@ -66,7 +66,7 @@ def main(args):
                                                                 bias=True).to(pytorch_device)
 
     if os.path.exists(model_load_path):
-        my_model = load_checkpoint_1b1(model_load_path, my_model)
+        my_model = load_checkpoint(model_load_path, my_model)
 
     my_model.to(pytorch_device)
     optimizer = optim.Adam(my_model.parameters(), lr=train_hypers["learning_rate"])
@@ -148,9 +148,7 @@ def main(args):
             dis_label_tensor = dis_labels.type(torch.LongTensor).to(pytorch_device)
             unknown_clss = [1,5,8,9]
             for unknown_cls in unknown_clss:
-                if unknown_cls != args.incremental_class:
-                    point_label_tensor[point_label_tensor == unknown_cls] = 0
-                else:
+                if unknown_cls == args.incremental_class:
                     unknown_cls_index = 18 + unknown_clss.index(unknown_cls)
                     point_label_tensor[point_label_tensor == unknown_cls] = unknown_cls_index
 
@@ -181,7 +179,6 @@ def main(args):
             unknown_clss = [1, 5, 8, 9]
             for unknown_cls in unknown_clss:
                 voxel_label_origin[voxel_label_origin == unknown_cls] = 18 + unknown_clss.index(unknown_cls)
-
 
             output_normal_dummy = y_normal_dummy.permute(0, 2, 3, 4, 1)
             output_normal_dummy = output_normal_dummy[coor_ori.permute(1, 0).chunk(chunks=4, dim=0)].squeeze()
@@ -233,7 +230,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('-y', '--config_path', default='../config/nuScenes_ood_incre.yaml')
     parser.add_argument('--dummynumber', default=5, type=int, help='number of dummy label.')
-    parser.add_argument('--incremental_class', default=5, type=int, help='incremental class')
+    parser.add_argument('--incremental_class', default=1, type=int, help='incremental class')
     args = parser.parse_args()
 
     print(' '.join(sys.argv))

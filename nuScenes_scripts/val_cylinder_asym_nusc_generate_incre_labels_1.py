@@ -92,16 +92,20 @@ def main(args):
             val_grid_ten = [torch.from_numpy(i).to(pytorch_device) for i in val_grid]
             val_label_tensor = val_vox_label.type(torch.LongTensor).to(pytorch_device)
 
-            coor_ori, y_in, y_out_dummy, predict_labels = my_model.forward_incremental(val_pt_fea_ten, val_grid_ten, val_batch_size)
+            coor_ori, y_in, y_out_dummy, predict_labels = my_model.forward_incremental(val_pt_fea_ten, val_grid_ten, val_batch_size, args.incremental_class)
 
             # aux_loss = loss_fun(aux_outputs, point_label_tensor)
             loss = lovasz_softmax(torch.nn.functional.softmax(predict_labels).detach(), val_label_tensor,
                                   ignore=0) + loss_func(predict_labels.detach(), val_label_tensor)
 
             predict_labels = torch.argmax(predict_labels, dim=1)
+
             unknown_clss = [1, 5, 8, 9]
             for unknown_cls in unknown_clss:
-                predict_labels[predict_labels == (17 + unknown_clss.index(unknown_cls))] = unknown_cls
+                predict_labels[predict_labels == unknown_cls] = 0
+                if unknown_clss.index(unknown_cls) <= unknown_clss.index(args.incremental_class):
+                    predict_labels[predict_labels == (17 + unknown_clss.index(unknown_cls))] = unknown_cls
+
             predict_labels = predict_labels.cpu().detach().numpy()
             # val_grid_ten: [batch, points, 3]
             # val_vox_label: [batch, 480, 360, 32]
@@ -111,7 +115,15 @@ def main(args):
             point_predict = predict_labels[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]].astype(np.int32)
             idx_s = "%06d" % idx[0]
             point_predict.tofile(
-                '/harddisk/jcenaa/nuScenes/predictions/predictions_inre1_train/' + idx_s + '.label')
+                '/harddisk/jcenaa/nuScenes/predictions/predictions_incre158_train/' + idx_s + '.label')
+
+            pred = np.fromfile('/harddisk/jcenaa/nuScenes/predictions/predictions_incre158_train/' + idx_s + '.label',
+                               dtype=np.int32)
+            # unknown_clss = [9]
+            # for unknown_cls in unknown_clss:
+            #     if unknown_cls in np.unique(pred):
+            #         print(np.unique(pred, return_counts=True))
+            #         print(pred_file)
 
             for count, i_val_grid in enumerate(val_grid):
                 hist_list.append(fast_hist_crop(predict_labels[
@@ -138,7 +150,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('-y', '--config_path', default='../config/nuScenes_ood_generate_incre_labels.yaml')
     parser.add_argument('--dummynumber', default=5, type=int, help='number of dummy label.')
-    parser.add_argument('--incremental_class', default=1, type=int, help='incremental class')
+    parser.add_argument('--incremental_class', default=8, type=int, help='incremental class')
     args = parser.parse_args()
 
     print(' '.join(sys.argv))

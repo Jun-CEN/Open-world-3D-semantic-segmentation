@@ -7,6 +7,7 @@ import os
 import time
 import argparse
 import sys
+sys.path.append("..")
 import numpy as np
 import torch
 import torch.optim as optim
@@ -47,6 +48,7 @@ def main(args):
 
     model_load_path = train_hypers['model_load_path']
     model_save_path = train_hypers['model_save_path']
+    model_latest_path = train_hypers['model_latest_path']
 
     SemKITTI_label_name = get_SemKITTI_label_name(dataset_config["label_mapping"])
     unique_label = np.asarray(sorted(list(SemKITTI_label_name.keys())))[1:] - 1
@@ -80,12 +82,12 @@ def main(args):
         time.sleep(10)
         # lr_scheduler.step(epoch)
         for i_iter, (_, train_vox_label, train_grid, _, train_pt_fea) in enumerate(train_dataset_loader):
-            if global_iter % check_iter == 0 and epoch >= 1:
+            if global_iter % check_iter == 0 and epoch >= 0:
                 my_model.eval()
                 hist_list = []
                 val_loss_list = []
                 with torch.no_grad():
-                    for i_iter_val, (_, val_vox_label, val_grid, val_pt_labs, val_pt_fea) in enumerate(
+                    for i_iter_val, (_, val_vox_label, val_grid, val_pt_labs, val_pt_fea, idx) in enumerate(
                             val_dataset_loader):
 
                         val_pt_fea_ten = [torch.from_numpy(i).type(torch.FloatTensor).to(pytorch_device) for i in
@@ -112,6 +114,8 @@ def main(args):
                     print('%s : %.2f%%' % (class_name, class_iou * 100))
                 val_miou = np.nanmean(iou) * 100
                 del val_vox_label, val_grid, val_pt_fea, val_grid_ten
+
+                torch.save(my_model.state_dict(), model_latest_path)
 
                 # save model if performance is improved
                 if best_val_miou < val_miou:
@@ -161,7 +165,7 @@ def main(args):
 if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('-y', '--config_path', default='config/semantickitti.yaml')
+    parser.add_argument('-y', '--config_path', default='../config/semantickitti.yaml')
     args = parser.parse_args()
 
     print(' '.join(sys.argv))

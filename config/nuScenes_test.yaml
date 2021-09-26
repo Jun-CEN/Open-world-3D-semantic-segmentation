@@ -22,8 +22,8 @@ model_params:
 ###################
 ## Dataset options
 dataset_params:
-  dataset_type: "cylinder_dataset_nuscenes_panop"
-  pc_dataset_type: "SemKITTI_nusc_panop"
+  dataset_type: "cylinder_dataset_nuscenes_test"
+  pc_dataset_type: "SemKITTI_nusc"
   ignore_label: 0
   return_test: False
   fixed_volume_space: True
@@ -44,13 +44,13 @@ train_data_loader:
   data_path: "/harddisk/jcenaa/nuScenes/"
   imageset: "/harddisk/jcenaa/nuScenes/lidarseg/nuscenes_infos_train.pkl"
   return_ref: True
-  batch_size: 4
+  batch_size: 1
   shuffle: True
   num_workers: 4
 
 val_data_loader:
   data_path: "/harddisk/jcenaa/nuScenes/"
-  imageset: "/harddisk/jcenaa/nuScenes/lidarseg/nuscenes_infos_train.pkl"
+  imageset: "/harddisk/jcenaa/nuScenes/lidarseg/nuscenes_infos_test.pkl"
   return_ref: True
   batch_size: 1
   shuffle: False
@@ -60,12 +60,12 @@ val_data_loader:
 ###################
 ## Train params
 train_params:
-  model_load_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_save_incre_158.pt"
-  model_save_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_save_incre_158.pt"
-  model_latest_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_latest_incre_158.pt"
+  model_load_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_save_origin.pt"
+  model_save_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_save_incre_1589.pt"
+  model_latest_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_save_incre_1589.pt"
   checkpoint_every_n_steps: 4599
-  max_num_epochs: 10
+  max_num_epochs: 40
   eval_every_n_steps: 4599
-  learning_rate: 0.001
-  lamda_1: 0.01
-  lamda_2: 1
+  learning_rate: 0.0001
+  lamda_1: 0
+  lamda_2: 0

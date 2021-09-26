@@ -107,8 +107,8 @@ def main(args):
             count = 0
             point_predict = predict_labels[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]].astype(np.int32)
             idx_s = "%06d" % idx[0]
-            point_predict.tofile(
-                '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/predictions_incre/' + idx_s + '.label')
+            # point_predict.tofile(
+            #     '/harddisk/jcenaa/semantic_kitti/predictions/sequences/08/predictions_incre/' + idx_s + '.label')
 
             for count, i_val_grid in enumerate(val_grid):
                 hist_list.append(fast_hist_crop(predict_labels[

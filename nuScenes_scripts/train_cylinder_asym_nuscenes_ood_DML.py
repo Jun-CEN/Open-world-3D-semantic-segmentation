@@ -7,6 +7,7 @@ import os
 import time
 import argparse
 import sys
+sys.path.append("..")
 import numpy as np
 import torch
 import torch.optim as optim
@@ -62,13 +63,10 @@ def main(args):
     my_model = model_builder.build(model_config)
 
     if os.path.exists(model_load_path):
-        my_model = load_checkpoint_1b1(model_load_path, my_model)
+        my_model = load_checkpoint(model_load_path, my_model)
 
     my_model.to(pytorch_device)
     optimizer = optim.Adam(my_model.parameters(), lr=train_hypers["learning_rate"])
-
-    # opt_level = 'O2'
-    # my_model, optimizer = amp.initialize(my_model, optimizer, opt_level=opt_level)
 
     loss_func, lovasz_softmax = loss_builder.build(wce=True, lovasz=True,
                                                        num_class=num_class, ignore_label=ignore_label)
@@ -105,10 +103,12 @@ def main(args):
                         val_label_tensor = val_vox_label.type(torch.LongTensor).to(pytorch_device)
 
                         predict_labels = my_model.forward_DML(val_pt_fea_ten, val_grid_ten, val_batch_size)
-                        loss = lovasz_softmax(torch.nn.functional.softmax(predict_labels).detach(), val_label_tensor,
-                                              ignore=0) + loss_func(predict_labels.detach(), val_label_tensor)
+                        # loss = lovasz_softmax(torch.nn.functional.softmax(predict_labels).detach(), val_label_tensor,
+                        #                       ignore=0) + loss_func(predict_labels.detach(), val_label_tensor)
+                        loss = loss_func(predict_labels.detach(), val_label_tensor)
                         predict_labels = torch.argmax(predict_labels, dim=1)
                         predict_labels = predict_labels.cpu().detach().numpy()
+                        count = 0
                         for count, i_val_grid in enumerate(val_grid):
                             hist_list.append(fast_hist_crop(predict_labels[
                                                                 count, val_grid[count][:, 0], val_grid[count][:, 1],
@@ -124,18 +124,11 @@ def main(args):
                 val_miou = np.nanmean(iou) * 100
                 del val_vox_label, val_grid, val_pt_fea, val_grid_ten
 
-                # checkpoint = {
-                #     'model': my_model.state_dict(),
-                #     'optimizer': optimizer.state_dict(),
-                #     'amp': amp.state_dict()
-                # }
-                # torch.save(checkpoint, model_latest_path)
                 torch.save(my_model.state_dict(), model_latest_path)
                 # save model if performance is improved
                 if best_val_miou < val_miou:
                     best_val_miou = val_miou
                     torch.save(my_model.state_dict(), model_save_path)
-                    # torch.save(checkpoint, model_save_path)
 
                 print('Current val miou is %.3f while the best val miou is %.3f' %
                       (val_miou, best_val_miou))
@@ -155,9 +148,6 @@ def main(args):
             loss = lovasz_softmax(torch.nn.functional.softmax(outputs), point_label_tensor, ignore=0) + loss_func(outputs, point_label_tensor)
 
             loss.backward()
-
-            # with amp.scale_loss(loss, optimizer) as scaled_loss:
-            #     scaled_loss.backward()
 
             optimizer.step()
             loss_list.append(loss.item())
@@ -185,7 +175,7 @@ def main(args):
 if __name__ == '__main__':
     # Training settings
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('-y', '--config_path', default='config/nuScenes.yaml')
+    parser.add_argument('-y', '--config_path', default='../config/nuScenes.yaml')
     args = parser.parse_args()
 
     print(' '.join(sys.argv))

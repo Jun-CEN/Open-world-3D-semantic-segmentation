@@ -7,6 +7,7 @@ import numpy as np
 from torch.utils import data
 import yaml
 import pickle
+from nuscenes.eval.lidarseg.utils import get_samples_in_eval_set
 
 REGISTERED_PC_DATASET_CLASSES = {}
 
@@ -91,7 +92,7 @@ class SemKITTI_sk(data.Dataset):
         if self.imageset == 'test':
             path_save = self.im_idx[index].replace('velodyne', 'predictions')
             path_save = path_save.replace('bin','label')
-            path_save = path_save.replace('dataset', 'predictions_test/predictions_incre')
+            path_save = path_save.replace('dataset', 'predictions_test/predictions_incre_latest')
             annotated_data = np.expand_dims(np.zeros_like(raw_data[:, 0], dtype=int), axis=1)
         else:
             annotated_data = np.fromfile(self.im_idx[index].replace('velodyne', 'labels')[:-3] + 'label',
@@ -262,7 +263,7 @@ class SemKITTI_nusc_panop_incre(data.Dataset):
         self.nusc = nusc
 
         self.pred_names = []
-        pred_paths = os.path.join(self.data_path, "predictions", "predictions_inre1_train")
+        pred_paths = os.path.join(self.data_path, "predictions", "predictions_incre158_train")
         # populate the label names
         seq_pred_names = [os.path.join(dp, f) for dp, dn, fn in os.walk(
             os.path.expanduser(pred_paths)) for f in fn if ".label" in f]
@@ -311,6 +312,7 @@ class SemKITTI_nusc(data.Dataset):
         self.nusc_infos = data['infos']
         self.data_path = data_path
         self.nusc = nusc
+        self.imageset = imageset
 
     def __len__(self):
         'Denotes the total number of samples'
@@ -319,18 +321,27 @@ class SemKITTI_nusc(data.Dataset):
     def __getitem__(self, index):
         info = self.nusc_infos[index]
         lidar_path = info['lidar_path'][16:]
-        lidar_sd_token = self.nusc.get('sample', info['token'])['data']['LIDAR_TOP']
-        lidarseg_labels_filename = os.path.join(self.nusc.dataroot,
-                                                self.nusc.get('lidarseg', lidar_sd_token)['filename'])
-
-        points_label = np.fromfile(lidarseg_labels_filename, dtype=np.uint8).reshape([-1, 1])
-        points_label = np.vectorize(self.learning_map.__getitem__)(points_label)
         points = np.fromfile(os.path.join(self.data_path, lidar_path), dtype=np.float32, count=-1).reshape([-1, 5])
+
+        lidar_sd_token = self.nusc.get('sample', info['token'])['data']['LIDAR_TOP']
+
+        if self.imageset.find('test') != -1:
+            points_label = np.expand_dims(np.zeros_like(points[:, 0], dtype=int), axis=1)
+        else:
+            lidarseg_labels_filename = os.path.join(self.nusc.dataroot,
+                                                    self.nusc.get('lidarseg', lidar_sd_token)['filename'])
+
+            points_label = np.fromfile(lidarseg_labels_filename, dtype=np.uint8).reshape([-1, 1])
+            points_label = np.vectorize(self.learning_map.__getitem__)(points_label)
 
         data_tuple = (points[:, :3], points_label.astype(np.uint8))
         if self.return_ref:
             data_tuple += (points[:, 3],)
-        return data_tuple
+
+        if self.imageset.find('test') != -1:
+            return data_tuple, lidar_sd_token
+        else:
+            return data_tuple
 
 def absoluteFilePaths(directory):
     for dirpath, _, filenames in os.walk(directory):

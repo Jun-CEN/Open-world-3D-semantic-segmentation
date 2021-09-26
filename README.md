@@ -38,8 +38,12 @@
 ### nuScenes
 ```
 ./
-├── 
 ├── ...
+├── v1.0-trainval
+├── v1.0-test
+├── samples
+├── sweeps
+├── maps
 └── lidarseg/
     ├──v1.0-trainval/
     ├──v1.0-mini/
@@ -47,7 +51,7 @@
     ├──nuscenes_infos_train.pkl
     ├──nuscenes_infos_val.pkl
     ├──nuscenes_infos_test.pkl
-└── lidarseg/
+└── panoptic/
     ├──v1.0-trainval/
     ├──v1.0-mini/
     ├──v1.0-test/
@@ -199,14 +203,14 @@ First, use the trained base model to generate and save the pseudo labels of the 
 ```
 ./val_generate_incre_labels.sh
 ```
-- Change the trained model path in `/config/semantickitti_ood_generate_incre_labels.yaml`, line 63
-- Change the save path of pseudo labels in `val_cylinder_asym_generate_incre_labels.py`, line 116
+- Change the trained model path in `/config/semantickitti_ood_generate_incre_labels.yaml`, line 63.
+- Change the save path of pseudo labels in `val_cylinder_asym_generate_incre_labels.py`, line 116.
 
-Then, change the loading path of pseudo labels in `/dataloader/pc_dataset.py`, line 265.
+Then, change the loading path of pseudo labels in `/dataloader/pc_dataset.py`, line 177.
 
 Now, conduct incremental learing using pseudo labels:
 ```
-./train_cylinder_asym_ood_incremental.py
+./train_incre.sh
 ```
 - Change the trained model path in `/config/semantickitti_ood_incre.yaml`, line 63.
 
@@ -220,3 +224,53 @@ For test set:
 ./test_incre.sh
 ```
 - Change the `collate_fn=collate_fn_BEV_val_test` in `/builder/data_builder.py`, line 70.
+- Change the save path in `/dataloader/pc_dataset.py`, line 95.
+- Upload the generated files into the [evalution server](https://competitions.codalab.org/competitions/20331#participate).
+### Training for nuScenes
+All scripts for nuScenes dataset are in `./nuScenes_scripts`.
+#### For new class 1(barrier)
+
+First, generate and save the pseudo labels of the training set:
+```
+./val_nusc_generate_incre_labels.sh
+```
+- Change the trained model path in `/config/nuScenes_ood_generate_incre_labels.yaml`, line 63.
+- Change the save path of pseudo labels in `val_cylinder_asym_nusc_generate_incre_labels.py`, line 120.
+
+Then, change the loading path of pseudo labels in `/dataloader/pc_dataset.py`, line 266.
+
+Now, conduct incremental learing using pseudo labels:
+```
+./train_nusc_incre.sh
+```
+
+#### For new class 5(construction-vehicle), 8(traffic-cone), 9(trailer)
+First, generate and save the pseudo labels of the training set:
+```
+./val_nusc_generate_incre_labels.sh
+```
+- Change the python file from `val_cylinder_asym_nusc_generate_incre_labels.py` into
+`val_cylinder_asym_nusc_generate_incre_labels_1.py`.
+- Change the incremental class in `val_cylinder_asym_nusc_generate_incre_labels_1.py`, line 153.
+- Change the trained model and save path similar with new class 1.
+
+Then, change the loading path of pseudo labels in `/dataloader/pc_dataset.py`, line 266.
+
+Now, conduct incremental learing using pseudo labels:
+```
+./train_nusc_incre.sh
+```
+- Change the trained model path in `/config/nuScenes_ood_incre.yaml`, line 63.
+
+### Evaluation for nuScenes
+For validation set:
+```
+./val_incre.sh
+```
+For test set:
+- Change the NuScenes version from `nusc = NuScenes(version='v1.0-trainval', dataroot=data_path, verbose=True)`
+to `nusc = NuScenes(version='v1.0-test', dataroot=data_path, verbose=True)`
+```
+./test_incre.sh
+```
+Then upload the generated files into the [evaluation server](https://eval.ai/web/challenges/challenge-page/720/my-submission).

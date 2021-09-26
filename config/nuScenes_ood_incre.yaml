@@ -60,9 +60,9 @@ val_data_loader:
 ###################
 ## Train params
 train_params:
-  model_load_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_latest_incre_1.pt"
-  model_save_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_save_incre_15.pt"
-  model_latest_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_latest_incre_15.pt"
+  model_load_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_save_incre_158.pt"
+  model_save_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_save_incre_1589.pt"
+  model_latest_path: "/harddisk/jcenaa/nuScenes/checkpoints/model_latest_incre_1589.pt"
   checkpoint_every_n_steps: 4599
   max_num_epochs: 10
   eval_every_n_steps: 4599

@@ -56,7 +56,7 @@ def main(args):
 
     my_model = model_builder.build(model_config)
     if os.path.exists(model_load_path):
-        my_model = load_checkpoint_1b1(model_load_path, my_model)
+        my_model = load_checkpoint(model_load_path, my_model)
         print('Load checkpoint file successfully!')
 
     my_model.to(pytorch_device)
@@ -106,6 +106,9 @@ def main(args):
             # val_pt_labs: [batch, points, 1]
             count = 0
             point_predict = predict_labels[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]].astype(np.int32)
+            unknown_clss = [1, 5, 8, 9]
+            for unknown_cls in unknown_clss:
+                point_predict[point_predict==unknown_cls] = 0
             point_uncertainty_logits = uncertainty_scores_logits[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]]
             point_uncertainty_softmax = uncertainty_scores_softmax[count, val_grid[count][:, 0], val_grid[count][:, 1],val_grid[count][:, 2]]
             idx_s = "%06d" % idx[0]
@@ -115,6 +118,13 @@ def main(args):
             #     '/harddisk/jcenaa/nuScenes/predictions/scores_softmax_upper/' + idx_s + '.label')
             point_predict.tofile(
                 '/harddisk/jcenaa/nuScenes/predictions/predictions_base_train/' + idx_s + '.label')
+
+            pred = np.fromfile('/harddisk/jcenaa/nuScenes/predictions/predictions_base_train/' + idx_s + '.label', dtype=np.int32)
+            unknown_clss = [1, 5, 8, 9]
+            for unknown_cls in unknown_clss:
+                if unknown_cls in np.unique(pred):
+                    print(np.unique(pred, return_counts=True))
+                    print(pred_file)
 
             for count, i_val_grid in enumerate(val_grid):
                 hist_list.append(fast_hist_crop(predict_labels[

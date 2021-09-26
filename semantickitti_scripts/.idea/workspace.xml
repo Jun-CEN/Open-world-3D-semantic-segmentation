@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="d5736180-4b3d-457a-83a4-b5035a82a86b" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../builder/data_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/../builder/data_builder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../config/nuScenes.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../config/nuScenes.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../config/nuScenes_ood_generate_incre_labels.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../config/nuScenes_ood_generate_incre_labels.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../config/nuScenes_ood_incre.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../config/nuScenes_ood_incre.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../config/semantickitti.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../config/semantickitti.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../config/semantickitti_ood_incre.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../config/semantickitti_ood_incre.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../config/semantickitti_test.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../config/semantickitti_test.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dataloader/dataset_nuscenes.py" beforeDir="false" afterPath="$PROJECT_DIR$/../dataloader/dataset_nuscenes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dataloader/pc_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/../dataloader/pc_dataset.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../network/segmentator_3d_asymm_spconv.py" beforeDir="false" afterPath="$PROJECT_DIR$/../network/segmentator_3d_asymm_spconv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../nuScenes_scripts/train_cylinder_asym_nuscenes_ood_DML.py" beforeDir="false" afterPath="$PROJECT_DIR$/../nuScenes_scripts/train_cylinder_asym_nuscenes_ood_DML.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../nuScenes_scripts/train_cylinder_asym_nuscenes_ood_incremental.py" beforeDir="false" afterPath="$PROJECT_DIR$/../nuScenes_scripts/train_cylinder_asym_nuscenes_ood_incremental.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../nuScenes_scripts/train_nusc_DML.sh" beforeDir="false" afterPath="$PROJECT_DIR$/../nuScenes_scripts/train_nusc_DML.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../nuScenes_scripts/val_cylinder_asym_nusc.py" beforeDir="false" afterPath="$PROJECT_DIR$/../nuScenes_scripts/val_cylinder_asym_nusc.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../nuScenes_scripts/val_cylinder_asym_nusc_generate_incre_labels.py" beforeDir="false" afterPath="$PROJECT_DIR$/../nuScenes_scripts/val_cylinder_asym_nusc_generate_incre_labels.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../nuScenes_scripts/val_cylinder_asym_nusc_generate_incre_labels_1.py" beforeDir="false" afterPath="$PROJECT_DIR$/../nuScenes_scripts/val_cylinder_asym_nusc_generate_incre_labels_1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../nuScenes_scripts/val_cylinder_asym_nusc_upper.py" beforeDir="false" afterPath="$PROJECT_DIR$/../nuScenes_scripts/val_cylinder_asym_nusc_upper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../nuScenes_scripts/val_nusc_generate_incre_labels.sh" beforeDir="false" afterPath="$PROJECT_DIR$/../nuScenes_scripts/val_nusc_generate_incre_labels.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/train.sh" beforeDir="false" afterPath="$PROJECT_DIR$/train.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_cylinder_asym.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_cylinder_asym.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_cylinder_asym_DML.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_cylinder_asym_DML.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/val_cylinder_asym_incre.py" beforeDir="false" afterPath="$PROJECT_DIR$/val_cylinder_asym_incre.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectId" id="1yfLyYrUeixKh6sB19uVPxg5Hjq" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="d5736180-4b3d-457a-83a4-b5035a82a86b" name="Changes" comment="" />
+      <created>1632637950902</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1632637950902</updated>
+      <workItem from="1632637952026" duration="9000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
