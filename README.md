@@ -60,7 +60,7 @@
 ## Open-set semantic segmentation
 ### Training for SemanticKITTI
 All scripts for SemanticKITTI dataset is in `./semantickitti_scripts`.
-#### Naive method
+#### MSP/Maxlogit method
 ```
 ./train_naive.sh
 ```
@@ -68,7 +68,7 @@ All scripts for SemanticKITTI dataset is in `./semantickitti_scripts`.
 ```
 ./train_upper.sh
 ```
-#### Classifier placeholder
+#### RCF - Predictive Distribution Calibration
 - Change the path of pretrained naive model in `/config/semantickitti_ood_basic.yaml`, line 63.
 
 - Change the coefficient lamda_1 in `/config/semantickitti_ood_basic.yaml`, line 70.
@@ -77,7 +77,7 @@ All scripts for SemanticKITTI dataset is in `./semantickitti_scripts`.
 ```
 ./train_ood_basic.sh
 ```
-#### Data placeholder
+#### RCF - Unknown Object Synthesis
 
 - Change the path of pretrained naive model in `/config/semantickitti_ood_final.yaml`, line 63.
 
@@ -114,7 +114,7 @@ and these files will be used to calculate the closed-set mIoU and open-set metri
 ./val_upper.sh
 ```
 
-#### Classifier/Data placeholder
+#### RCF
 - Change the trained model path (Placeholder method) in `/config/semantickitti_ood_final.yaml`, line 63.
 
 - Change the saving path of in-distribution prediction results and uncertainty scores in `val_cylinder_asym_ood.py`, line 124, 125.
@@ -130,7 +130,7 @@ and these files will be used to calculate the closed-set mIoU and open-set metri
 
 ### Training for nuScenes
 All scripts for nuScenes dataset are in `./nuScenes_scripts`
-#### Naive method
+#### MSP/Maxlogit method
 ```
 ./train_nusc_naive.sh
 ```
@@ -138,7 +138,7 @@ All scripts for nuScenes dataset are in `./nuScenes_scripts`
 ```
 ./train_nusc.sh
 ```
-#### Classifier placeholder
+#### RCF - Predictive Distribution Calibration
 - Change the path of pretrained naive model in `/config/nuScenes_ood_basic.yaml`, line 63.
 
 - Change the coefficient lamda_1 in `/config/nuScenes_ood_basic.yaml`, line 70.
@@ -147,7 +147,7 @@ All scripts for nuScenes dataset are in `./nuScenes_scripts`
 ```
 ./train_nusc_ood_basic.sh
 ```
-#### Data placeholder
+#### RCF - Unknown Object Synthesis
 
 - Change the path of pretrained naive model in `/config/nuScenes_ood_final.yaml`, line 63.
 
@@ -181,7 +181,7 @@ All scripts for nuScenes dataset are in `./nuScenes_scripts`
 ./val_nusc_upper.sh
 ```
 
-#### Classifier/Data placeholder
+#### MSP
 - Change the trained model path (Placeholder method) in `/config/nuScenes_ood_final.yaml`, line 63.
 
 - Change the saving path of in-distribution prediction results and uncertainty scores in `val_cylinder_asym_nusc_ood.py`, line 125, 126.
