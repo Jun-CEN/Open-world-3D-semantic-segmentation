@@ -181,7 +181,7 @@ All scripts for nuScenes dataset are in `./nuScenes_scripts`
 ./val_nusc_upper.sh
 ```
 
-#### MSP
+#### RCF
 - Change the trained model path (Placeholder method) in `/config/nuScenes_ood_final.yaml`, line 63.
 
 - Change the saving path of in-distribution prediction results and uncertainty scores in `val_cylinder_asym_nusc_ood.py`, line 125, 126.
