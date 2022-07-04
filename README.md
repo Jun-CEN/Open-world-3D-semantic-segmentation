@@ -1,6 +1,7 @@
 
 # Open-world semantic segmentation for Lidar Point Clouds
 Official implementation of "Open-world semantic segmentation for Lidar Point Clouds", ECCV 2022.
+After saving the corresponding inference result files using this repository, please use [semantic_kitti_api](https://github.com/Jun-CEN/semantic_kitti_api) and [nuScenes_api](https://github.com/Jun-CEN/nuScenes_api) to evaluate the performance.
 
 ## Installation
 
