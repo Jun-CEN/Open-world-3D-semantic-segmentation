@@ -1,5 +1,6 @@
 
-# Open-world semantic segmentation for Lidar points
+# Open-world semantic segmentation for Lidar Point Clouds
+Official implementation of "Open-world semantic segmentation for Lidar Point Clouds", ECCV 2022.
 
 ## Installation
 
