@@ -59,6 +59,10 @@ After saving the corresponding inference result files using this repository, ple
     ├──v1.0-test/
 ```
 
+## Checkpoints
+We provide the checkpoints of open-set model and incremental learning model here: [checkpoints](https://drive.google.com/drive/folders/1GopqXwTen7jcq1q4tI0_BY20AEMVX4bN?usp=share_link)
+
+
 ## Open-set semantic segmentation
 ### Training for SemanticKITTI
 All scripts for SemanticKITTI dataset is in `./semantickitti_scripts`.
